@@ -1,0 +1,38 @@
+[Unit]
+Description=Polymarket 24/7 Autonomous Trading Bot
+After=network.target
+
+[Service]
+Type=simple
+User=tony
+WorkingDirectory=/home/tony/Dev/agents
+Environment="PYTHONPATH=/home/tony/Dev/agents"
+ExecStart=/home/tony/Dev/agents/.venv/bin/python /home/tony/Dev/agents/scripts/python/learning_autonomous_trader.py --continuous --live
+
+# Only restart on failures, not clean exits
+Restart=on-failure
+RestartSec=60
+
+# CRITICAL: Prevent restart on CriticalIncident (exit code 42)
+# When bot exits with code 42, it means manual intervention required
+# Auto-restart would create dangerous retry loops
+RestartPreventExitStatus=42
+
+# Optional: Treat exit 42 as "success" instead of "failure" for monitoring
+# Trade-off: Reduces "service failed" noise but also reduces failure visibility
+# Only enable if you have other alerting (Discord/monitoring)
+# SuccessExitStatus=42
+
+StandardOutput=append:/tmp/polymarket-bot-stdout.log
+StandardError=append:/tmp/polymarket-bot-stderr.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Resource limits
+MemoryMax=1G
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target

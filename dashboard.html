@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Dashboard | Polymarket Agent</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@600;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #131829;
+            --bg-tertiary: #1a1f3a;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-dim: #52525b;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --border-color: #27272a;
+            --glow-green: rgba(16, 185, 129, 0.3);
+            --glow-red: rgba(239, 68, 68, 0.3);
+            --glow-cyan: rgba(6, 182, 212, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px var(--glow-cyan);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 20px var(--glow-green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .status-text {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        .last-update {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px var(--glow-cyan);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .stat-value.positive {
+            color: var(--accent-green);
+            text-shadow: 0 0 10px var(--glow-green);
+        }
+
+        .stat-value.negative {
+            color: var(--accent-red);
+            text-shadow: 0 0 10px var(--glow-red);
+        }
+
+        .stat-value.neutral {
+            color: var(--accent-cyan);
+        }
+
+        .stat-subtext {
+            font-size: 0.875rem;
+            color: var(--text-dim);
+            margin-top: 0.5rem;
+        }
+
+        /* Charts */
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        canvas {
+            max-height: 300px;
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.875rem;
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.yes {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+        }
+
+        .badge.no {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        .badge.open {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--accent-cyan);
+            border: 1px solid var(--accent-cyan);
+        }
+
+        .pnl-positive {
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        .pnl-negative {
+            color: var(--accent-red);
+            font-weight: 700;
+        }
+
+        /* Safety Limits */
+        .limits-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .limit-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .limit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .limit-title {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .limit-status {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .limit-status.safe {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .limit-status.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-amber);
+        }
+
+        .limit-status.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        .limit-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .limit-bar-fill {
+            height: 100%;
+            background: var(--accent-green);
+            transition: width 0.3s ease;
+        }
+
+        .limit-bar-fill.warning {
+            background: var(--accent-amber);
+        }
+
+        .limit-bar-fill.danger {
+            background: var(--accent-red);
+        }
+
+        .limit-values {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+        }
+
+        .limit-current {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .limit-max {
+            color: var(--text-dim);
+        }
+
+        /* Error state */
+        .error-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-red);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Loading state */
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            .limits-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>◢ Polymarket Agent ◣</h1>
+            <div class="status-indicator">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div class="status-dot"></div>
+                        <span class="status-text" id="status-text">System Active</span>
+                    </div>
+                    <div class="last-update">Last update: <span id="last-update">--:--:--</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-container"></div>
+
+        <!-- Honesty Banner -->
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid var(--accent-amber); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+            <div style="font-size: 0.875rem; color: var(--accent-amber); font-weight: 600; margin-bottom: 0.25rem;">
+                ⚠️ DATABASE VIEW - NOT EXCHANGE TRUTH
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">
+                This dashboard reads from SQLite. It may not reflect actual exchange positions.
+                <br>
+                Last exchange reconciliation: <span style="color: var(--accent-red); font-weight: 700;">NONE</span>
+                <br>
+                Last DB write: <span id="db-staleness" style="font-weight: 700;">--</span>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Trades</div>
+                <div class="stat-value neutral" id="total-trades">--</div>
+                <div class="stat-subtext"><span id="open-positions">--</span> open positions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value neutral" id="win-rate">--%</div>
+                <div class="stat-subtext"><span id="wins">--</span>W / <span id="losses">--</span>L</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total P&L</div>
+                <div class="stat-value" id="total-pnl">$--</div>
+                <div class="stat-subtext">Lifetime performance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Confidence</div>
+                <div class="stat-value neutral" id="avg-confidence">--%</div>
+                <div class="stat-subtext">Model certainty</div>
+            </div>
+        </div>
+
+        <!-- Safety Limits -->
+        <div class="limits-grid">
+            <div class="limit-card">
+                <div class="limit-header">
+                    <span class="limit-title">Exposure Cap</span>
+                    <span class="limit-status safe" id="exposure-status">SAFE</span>
+                </div>
+                <div class="limit-bar">
+                    <div class="limit-bar-fill" id="exposure-bar"></div>
+                </div>
+                <div class="limit-values">
+                    <span class="limit-current" id="exposure-current">$0.00</span>
+                    <span class="limit-max">/ $<span id="exposure-limit">50.00</span></span>
+                </div>
+            </div>
+            <div class="limit-card">
+                <div class="limit-header">
+                    <span class="limit-title">Trades/Hour</span>
+                    <span class="limit-status safe" id="hourly-status">SAFE</span>
+                </div>
+                <div class="limit-bar">
+                    <div class="limit-bar-fill" id="hourly-bar"></div>
+                </div>
+                <div class="limit-values">
+                    <span class="limit-current" id="hourly-current">0</span>
+                    <span class="limit-max">/ <span id="hourly-limit">20</span></span>
+                </div>
+            </div>
+            <div class="limit-card">
+                <div class="limit-header">
+                    <span class="limit-title">Daily P&L</span>
+                    <span class="limit-status safe" id="daily-status">SAFE</span>
+                </div>
+                <div class="limit-bar">
+                    <div class="limit-bar-fill" id="daily-bar"></div>
+                </div>
+                <div class="limit-values">
+                    <span class="limit-current" id="daily-current">$0.00</span>
+                    <span class="limit-max">Stop: $<span id="daily-limit">-10.00</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-grid">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <span class="chart-title">⚡ Cumulative P&L</span>
+                </div>
+                <canvas id="pnl-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-header">
+                    <span class="chart-title">📊 Win Rate (Rolling 10)</span>
+                </div>
+                <canvas id="winrate-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Trades Table -->
+        <div class="table-container">
+            <div class="chart-header">
+                <span class="chart-title">📋 Recent Trades</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Market</th>
+                        <th>Prediction</th>
+                        <th>Confidence</th>
+                        <th>Size</th>
+                        <th>Outcome</th>
+                        <th>P&L</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="trades-table">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-dim);">
+                            <div class="loading"></div> Loading trades...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5555/api';
+        let pnlChart, winRateChart;
+
+        // Initialize charts
+        function initCharts() {
+            const chartConfig = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(39, 39, 42, 0.5)'
+                        },
+                        ticks: {
+                            color: '#71717a'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(39, 39, 42, 0.5)'
+                        },
+                        ticks: {
+                            color: '#71717a'
+                        }
+                    }
+                }
+            };
+
+            // P&L Chart
+            const pnlCtx = document.getElementById('pnl-chart').getContext('2d');
+            pnlChart = new Chart(pnlCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'P&L (USDC)',
+                        data: [],
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: chartConfig
+            });
+
+            // Win Rate Chart
+            const wrCtx = document.getElementById('winrate-chart').getContext('2d');
+            winRateChart = new Chart(wrCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Win Rate (%)',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: chartConfig
+            });
+        }
+
+        // Fetch and update status
+        async function updateStatus() {
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                const data = await response.json();
+
+                document.getElementById('total-trades').textContent = data.total_trades;
+                document.getElementById('wins').textContent = data.wins;
+                document.getElementById('losses').textContent = data.losses;
+                document.getElementById('open-positions').textContent = data.open_positions;
+                document.getElementById('win-rate').textContent = `${data.win_rate}%`;
+                document.getElementById('avg-confidence').textContent = `${data.avg_confidence}%`;
+
+                // P&L with color
+                const pnlEl = document.getElementById('total-pnl');
+                pnlEl.textContent = `$${data.total_pnl}`;
+                pnlEl.className = 'stat-value ' + (data.total_pnl > 0 ? 'positive' : data.total_pnl < 0 ? 'negative' : 'neutral');
+
+                // Update timestamp
+                const now = new Date();
+                document.getElementById('last-update').textContent = now.toLocaleTimeString();
+
+                // Calculate and display DB staleness
+                const stalenessEl = document.getElementById('db-staleness');
+                if (data.last_activity) {
+                    const lastActivity = new Date(data.last_activity * 1000); // Convert Unix timestamp to JS Date
+                    const staleness = Math.floor((now - lastActivity) / 1000 / 60); // Minutes
+
+                    if (staleness < 1) {
+                        stalenessEl.textContent = 'Just now';
+                        stalenessEl.style.color = 'var(--accent-green)';
+                    } else if (staleness < 5) {
+                        stalenessEl.textContent = `${staleness} min ago`;
+                        stalenessEl.style.color = 'var(--accent-green)';
+                    } else if (staleness < 30) {
+                        stalenessEl.textContent = `${staleness} min ago`;
+                        stalenessEl.style.color = 'var(--accent-amber)';
+                    } else {
+                        stalenessEl.textContent = `${staleness} min ago (STALE!)`;
+                        stalenessEl.style.color = 'var(--accent-red)';
+                    }
+                } else {
+                    stalenessEl.textContent = 'No data';
+                    stalenessEl.style.color = 'var(--text-dim)';
+                }
+
+                // Clear error
+                document.getElementById('error-container').innerHTML = '';
+
+            } catch (error) {
+                showError('Failed to fetch status data');
+                console.error('Status error:', error);
+            }
+        }
+
+        // Update safety limits
+        async function updateSafetyLimits() {
+            try {
+                const response = await fetch(`${API_URL}/safety_limits`);
+                const data = await response.json();
+
+                // Exposure
+                updateLimitBar('exposure', data.exposure.current, data.exposure.limit);
+                document.getElementById('exposure-current').textContent = `$${data.exposure.current}`;
+                document.getElementById('exposure-limit').textContent = data.exposure.limit.toFixed(2);
+
+                // Hourly trades
+                updateLimitBar('hourly', data.trades_per_hour.current, data.trades_per_hour.limit);
+                document.getElementById('hourly-current').textContent = data.trades_per_hour.current;
+                document.getElementById('hourly-limit').textContent = data.trades_per_hour.limit;
+
+                // Daily P&L (inverse - loss limit)
+                const dailyPct = Math.max(0, Math.min(100, (Math.abs(data.daily_loss_limit.current_pnl) / Math.abs(data.daily_loss_limit.limit)) * 100));
+                updateLimitBar('daily', Math.abs(data.daily_loss_limit.current_pnl), Math.abs(data.daily_loss_limit.limit), dailyPct);
+                document.getElementById('daily-current').textContent = `$${data.daily_loss_limit.current_pnl}`;
+                document.getElementById('daily-limit').textContent = data.daily_loss_limit.limit.toFixed(2);
+
+            } catch (error) {
+                console.error('Safety limits error:', error);
+            }
+        }
+
+        function updateLimitBar(prefix, current, limit, overridePct = null) {
+            const percentage = overridePct !== null ? overridePct : (current / limit) * 100;
+            const bar = document.getElementById(`${prefix}-bar`);
+            const status = document.getElementById(`${prefix}-status`);
+
+            bar.style.width = `${Math.min(100, percentage)}%`;
+
+            if (percentage >= 90) {
+                bar.className = 'limit-bar-fill danger';
+                status.className = 'limit-status danger';
+                status.textContent = 'DANGER';
+            } else if (percentage >= 70) {
+                bar.className = 'limit-bar-fill warning';
+                status.className = 'limit-status warning';
+                status.textContent = 'WARNING';
+            } else {
+                bar.className = 'limit-bar-fill';
+                status.className = 'limit-status safe';
+                status.textContent = 'SAFE';
+            }
+        }
+
+        // Update P&L chart
+        async function updatePnLChart() {
+            try {
+                const response = await fetch(`${API_URL}/pnl_history`);
+                const data = await response.json();
+
+                const labels = data.map(d => new Date(d.timestamp).toLocaleDateString());
+                const values = data.map(d => d.cumulative_pnl);
+
+                pnlChart.data.labels = labels;
+                pnlChart.data.datasets[0].data = values;
+                pnlChart.update('none');
+
+            } catch (error) {
+                console.error('P&L chart error:', error);
+            }
+        }
+
+        // Update win rate chart
+        async function updateWinRateChart() {
+            try {
+                const response = await fetch(`${API_URL}/win_rate_history`);
+                const data = await response.json();
+
+                const labels = data.map(d => new Date(d.timestamp).toLocaleDateString());
+                const values = data.map(d => d.win_rate);
+
+                winRateChart.data.labels = labels;
+                winRateChart.data.datasets[0].data = values;
+                winRateChart.update('none');
+
+            } catch (error) {
+                console.error('Win rate chart error:', error);
+            }
+        }
+
+        // Update recent trades table
+        async function updateTradesTable() {
+            try {
+                const response = await fetch(`${API_URL}/recent_trades`);
+                const trades = await response.json();
+
+                const tbody = document.getElementById('trades-table');
+                tbody.innerHTML = '';
+
+                trades.forEach(trade => {
+                    const row = document.createElement('tr');
+
+                    // Outcome badge
+                    let outcomeBadge = '';
+                    if (trade.outcome === 'OPEN') {
+                        outcomeBadge = '<span class="badge open">OPEN</span>';
+                    } else if (trade.outcome === trade.prediction) {
+                        outcomeBadge = '<span class="badge yes">WIN</span>';
+                    } else {
+                        outcomeBadge = '<span class="badge no">LOSS</span>';
+                    }
+
+                    // Prediction badge
+                    const predictionBadge = trade.prediction === 'Yes'
+                        ? '<span class="badge yes">YES</span>'
+                        : '<span class="badge no">NO</span>';
+
+                    // P&L
+                    const pnlClass = trade.pnl > 0 ? 'pnl-positive' : trade.pnl < 0 ? 'pnl-negative' : '';
+                    const pnlText = trade.outcome === 'OPEN' ? '--' : `$${trade.pnl.toFixed(2)}`;
+
+                    row.innerHTML = `
+                        <td>${trade.question}</td>
+                        <td>${predictionBadge}</td>
+                        <td>${trade.confidence}%</td>
+                        <td>$${trade.size.toFixed(2)}</td>
+                        <td>${outcomeBadge}</td>
+                        <td class="${pnlClass}">${pnlText}</td>
+                        <td>${new Date(trade.timestamp).toLocaleString()}</td>
+                    `;
+
+                    tbody.appendChild(row);
+                });
+
+                if (trades.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-dim);">No trades yet</td></tr>';
+                }
+
+            } catch (error) {
+                console.error('Trades table error:', error);
+                document.getElementById('trades-table').innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--accent-red);">Failed to load trades</td></tr>';
+            }
+        }
+
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            container.innerHTML = `<div class="error-banner">⚠️ ${message}</div>`;
+        }
+
+        // Initialize and start refresh loop
+        async function init() {
+            initCharts();
+            await updateStatus();
+            await updateSafetyLimits();
+            await updatePnLChart();
+            await updateWinRateChart();
+            await updateTradesTable();
+
+            // Refresh every 10 seconds
+            setInterval(async () => {
+                await updateStatus();
+                await updateSafetyLimits();
+                await updatePnLChart();
+                await updateWinRateChart();
+                await updateTradesTable();
+            }, 10000);
+        }
+
+        // Start on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
