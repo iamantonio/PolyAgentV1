@@ -855,8 +855,9 @@ Keep it simple and fast."""
             'market_id': market_id,
             'market': market,
             'question': question,
+            'market_type': 'crypto',  # Fast path only handles crypto micro-markets
             'outcome': outcome,
-            'confidence': calibrated_confidence,
+            'calibrated_confidence': calibrated_confidence,  # FIX: was 'confidence'
             'market_price': market_price,
             'position_size': position_size,
             'reasoning': f"Fast micro-market prediction: {outcome}",
@@ -1046,7 +1047,6 @@ Keep it simple and fast."""
 
             # Track trade time for safety limits
             if not self.dry_run:
-                from datetime import datetime
                 self.trade_times.append(datetime.now())
 
             # Mark this market as traded to prevent duplicates
@@ -1145,38 +1145,37 @@ Keep it simple and fast."""
             try:
                 market_data = self.gamma.get_market(market_id)
 
-                # Get current price for our outcome
-                if outcome == "YES":
-                    current_price = market_data.get('clobTokenIds', [None])[0]
-                    if current_price:
-                        # Fetch current orderbook price
-                        try:
-                            orderbook = self.polymarket.client.get_order_book(current_price)
-                            bids = orderbook.get('bids', [])
-                            if bids:
-                                current_price = float(bids[0]['price'])
-                            else:
-                                print(f"  ⚠️  No bids available, skipping")
-                                continue
-                        except:
-                            print(f"  ⚠️  Could not fetch orderbook, skipping")
-                            continue
-                else:
-                    current_price = market_data.get('clobTokenIds', [None])[1]
-                    if current_price:
-                        try:
-                            orderbook = self.polymarket.client.get_order_book(current_price)
-                            bids = orderbook.get('bids', [])
-                            if bids:
-                                current_price = float(bids[0]['price'])
-                            else:
-                                print(f"  ⚠️  No bids available, skipping")
-                                continue
-                        except:
-                            print(f"  ⚠️  Could not fetch orderbook, skipping")
-                            continue
+                # Get token IDs (defensive check for list length)
+                token_ids = market_data.get('clobTokenIds') or []
+                if len(token_ids) < 2:
+                    print(f"  ⚠️  Invalid clobTokenIds (expected 2, got {len(token_ids)}), skipping")
+                    continue
+
+                # Get token ID for our outcome (YES=0, NO=1)
+                token_id_to_check = token_ids[0] if outcome == "YES" else token_ids[1]
+
+                if not token_id_to_check:
+                    print(f"  ⚠️  Missing token ID for {outcome}, skipping")
+                    continue
+
+                # Fetch current orderbook price for this token
+                try:
+                    orderbook = self.polymarket.client.get_order_book(token_id_to_check)
+                    bids = orderbook.get('bids', [])
+                    if bids:
+                        current_price = float(bids[0]['price'])
+                    else:
+                        print(f"  ⚠️  No bids available, skipping")
+                        continue
+                except Exception as ob_err:
+                    print(f"  ⚠️  Could not fetch orderbook: {ob_err}, skipping")
+                    continue
 
                 # Calculate P&L %
+                if current_price is None or entry_price in (None, 0):
+                    print(f"  ⚠️  Invalid price data (current={current_price}, entry={entry_price}), skipping")
+                    continue
+
                 pnl_pct = (current_price - entry_price) / entry_price
                 print(f"  Current: ${current_price:.4f} | P&L: {pnl_pct:+.1%}")
 
