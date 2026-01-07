@@ -70,8 +70,8 @@ MAX_OPEN_EXPOSURE_PCT = 0.50  # Never exceed 50% of bankroll in open positions
 APPLY_CALIBRATION_SHIFT = False  # Set True to apply systematic overconfidence adjustment
 CALIBRATION_SHIFT = -0.044  # From 54 trades: predicted 62%, actual 57.4%
 
-# Idempotency - Persisted Dedupe (recommended for production)
-PERSIST_IDEMPOTENCY = False  # Set True for hard guarantee across restarts
+# Idempotency - Persisted Dedupe (ENABLED FOR PRODUCTION)
+PERSIST_IDEMPOTENCY = True  # Hard guarantee against duplicate trades across restarts
 IDEMPOTENCY_WINDOW_HOURS = 24  # How long to remember trade intents
 
 # SAFETY LIMITS (Live Trading) - DISABLED FOR MICRO-MARKET TESTING
