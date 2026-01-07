@@ -881,6 +881,7 @@ Keep it simple and fast."""
             price = trade_plan['market_price']
 
             # Record prediction BEFORE execution (for learning)
+            # CRITICAL: Set trade_executed=False initially, update to True only on success
             pred_id = self.learner.record_prediction_and_learn(
                 market_id=market_id,
                 question=trade_plan['question'],
@@ -890,7 +891,7 @@ Keep it simple and fast."""
                 reasoning=trade_plan['reasoning'],
                 market_type=trade_plan['market_type'],
                 market_data=trade_plan['features'],
-                trade_executed=True,
+                trade_executed=False,  # FIXED: Don't lie before execution
                 trade_size=size,
                 trade_price=price
             )
@@ -898,9 +899,11 @@ Keep it simple and fast."""
             print(f"📊 Prediction recorded (ID: {pred_id})")
 
             # Execute trade
+            trade_success = False
             if self.dry_run:
                 print(f"🧪 DRY RUN: Would buy {size:.2f} USDC of {outcome} at ${price:.4f}")
                 result = "DRY_RUN_SUCCESS"
+                trade_success = True
             else:
                 # LIVE EXECUTION - ENABLED BY USER REQUEST
                 print(f"💰 LIVE TRADE: Buying {size:.2f} USDC of {outcome} at ${price:.4f}")
@@ -1020,6 +1023,9 @@ Keep it simple and fast."""
                     # Confirm persisted intent (two-phase commit)
                     self.confirm_trade_intent(intent_hash)
 
+                    # Mark as successful execution
+                    trade_success = True
+
                 except CriticalIncident:
                     # DO NOT delete intent on CriticalIncident
                     # DO NOT retry, DO NOT continue
@@ -1036,29 +1042,49 @@ Keep it simple and fast."""
                     # Only for normal exceptions, NOT CriticalIncident
                     self.fail_trade_intent(intent_hash)
 
-            # Discord alert
-            self.discord.alert_trade_executed(
-                market=trade_plan['question'],
-                outcome=outcome,
-                size=size,
-                price=price,
-                dry_run=self.dry_run
-            )
+                    # Mark as failed execution
+                    trade_success = False
 
-            # Track trade time for safety limits
-            if not self.dry_run:
-                self.trade_times.append(datetime.now())
+            # CRITICAL: Only update database and send alerts if trade actually succeeded
+            if trade_success:
+                # Update prediction to mark as executed
+                self.learner.db.update_prediction_execution(
+                    prediction_id=pred_id,
+                    trade_executed=True,
+                    execution_result="EXECUTED"
+                )
 
-            # Mark this market as traded to prevent duplicates
-            self.traded_market_ids.add(market_id)
+                # Discord alert (only on success)
+                self.discord.alert_trade_executed(
+                    market=trade_plan['question'],
+                    outcome=outcome,
+                    size=size,
+                    price=price,
+                    dry_run=self.dry_run
+                )
 
-            self.trades_executed += 1
+                # Track trade time for safety limits
+                if not self.dry_run:
+                    self.trade_times.append(datetime.now())
 
-            # Print learning progress every 10 trades
-            if self.trades_executed % 10 == 0:
-                self._send_learning_progress_alert()
+                # Mark this market as traded to prevent duplicates
+                self.traded_market_ids.add(market_id)
 
-            return True
+                self.trades_executed += 1
+
+                # Print learning progress every 10 trades
+                if self.trades_executed % 10 == 0:
+                    self._send_learning_progress_alert()
+
+                return True
+            else:
+                # Trade failed - update database with failure
+                self.learner.db.update_prediction_execution(
+                    prediction_id=pred_id,
+                    trade_executed=False,
+                    execution_result=f"FAILED: {result if 'result' in locals() else 'Unknown error'}"
+                )
+                return False
 
         except Exception as e:
             print(f"❌ Trade execution failed: {e}")

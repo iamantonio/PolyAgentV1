@@ -211,6 +211,25 @@ class TradeHistoryDB:
 
         self.conn.commit()
 
+    def update_prediction_execution(
+        self,
+        prediction_id: int,
+        trade_executed: bool,
+        execution_result: str
+    ):
+        """Update execution status for a prediction (success or failure)"""
+        cursor = self.conn.cursor()
+
+        cursor.execute("""
+            UPDATE predictions
+            SET trade_executed = ?,
+                execution_result = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (1 if trade_executed else 0, execution_result, prediction_id))
+
+        self.conn.commit()
+
     def record_outcome(
         self,
         market_id: str,
