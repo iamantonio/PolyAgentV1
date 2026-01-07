@@ -310,9 +310,9 @@ class LearningAutonomousTrader:
         """
         open_positions = self.learner.db.get_open_positions()
 
-        # Sum trade_size_usdc (assumes this equals capital at risk)
+        # Sum position sizes (get_open_positions returns 'size' not 'trade_size_usdc')
         # TODO: Verify this matches actual filled amounts from exchange
-        total_cost = sum(float(p['trade_size_usdc'] or 0) for p in open_positions)
+        total_cost = sum(float(p.get('size', 0) or 0) for p in open_positions)
 
         exposure_pct = total_cost / BANKROLL if BANKROLL > 0 else 0
         max_exposure = BANKROLL * MAX_OPEN_EXPOSURE_PCT
