@@ -3,6 +3,7 @@ from agents.polymarket.gamma import GammaMarketClient as Gamma
 from agents.polymarket.polymarket import Polymarket
 
 import shutil
+import traceback
 
 
 class Trader:
@@ -52,7 +53,8 @@ class Trader:
             print(f"4. FILTERED {len(filtered_markets)} MARKETS")
 
             market = filtered_markets[0]
-            best_trade = self.agent.source_best_trade(market)
+            # Use unified version (50% cost savings - single LLM call instead of two)
+            best_trade = self.agent.source_best_trade_unified(market)
             print(f"5. CALCULATED TRADE {best_trade}")
 
             amount = self.agent.format_trade_prompt_for_execution(best_trade)
@@ -61,8 +63,9 @@ class Trader:
             # print(f"6. TRADED {trade}")
 
         except Exception as e:
-            print(f"Error {e} \n \n Retrying")
-            self.one_best_trade()
+            print(f"[TRADE] Pipeline error: {e}")
+            print(traceback.format_exc())
+            raise  # Let outer loop handle retry with backoff
 
     def maintain_positions(self):
         pass

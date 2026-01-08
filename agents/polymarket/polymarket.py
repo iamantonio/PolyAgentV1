@@ -70,9 +70,27 @@ class Polymarket:
         self._init_approvals(False)
 
     def _init_api_keys(self) -> None:
-        self.client = ClobClient(
-            self.clob_url, key=self.private_key, chain_id=self.chain_id
-        )
+        # Magic.Link wallet configuration
+        # signature_type=1 for Magic.Link/Email wallets
+        # funder = Polymarket proxy wallet address (where USDC lives)
+        polymarket_proxy = os.getenv("POLYMARKET_PROXY_ADDRESS")
+
+        if polymarket_proxy:
+            # Magic.Link proxy mode
+            self.client = ClobClient(
+                self.clob_url,
+                key=self.private_key,
+                chain_id=self.chain_id,
+                signature_type=1,  # Magic.Link / Email wallet
+                funder=polymarket_proxy  # Proxy wallet with funds
+            )
+        else:
+            # Direct EOA mode fallback
+            self.client = ClobClient(
+                self.clob_url,
+                key=self.private_key,
+                chain_id=self.chain_id
+            )
         self.credentials = self.client.create_or_derive_api_creds()
         self.client.set_api_creds(self.credentials)
         # print(self.credentials)
@@ -230,6 +248,7 @@ class Polymarket:
             "outcomes": str(market["outcomes"]),
             "outcome_prices": str(market["outcomePrices"]),
             "clob_token_ids": str(market["clobTokenIds"]),
+            "created_at": market.get("createdAt", ""),  # For sorting by newest
         }
         if token_id:
             market["clob_token_ids"] = token_id

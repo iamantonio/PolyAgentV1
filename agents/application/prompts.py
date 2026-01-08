@@ -93,8 +93,11 @@ class Prompter:
         return (
             self.polymarket_analyst_api()
             + f"""
-        
+
+        Today's date is {datetime.today().strftime('%Y-%m-%d')}.
+
         Filter these events for the ones you will be best at trading on profitably.
+        CRITICAL: Only select events that have NOT yet resolved. Exclude any events with resolution dates in the past.
 
         """
         )
@@ -103,18 +106,38 @@ class Prompter:
         return (
             self.polymarket_analyst_api()
             + f"""
-        
+
+        Today's date is {datetime.today().strftime('%Y-%m-%d')}.
+
         Filter these markets for the ones you will be best at trading on profitably.
+        CRITICAL: Only select markets that have NOT yet resolved. Exclude any markets with resolution dates in the past.
 
         """
         )
 
-    def superforecaster(self, question: str, description: str, outcome: str) -> str:
+    def superforecaster(self, question: str, description: str, outcome: str, lunarcrush_context: str = None) -> str:
+        # Add LunarCrush context if provided
+        social_intelligence = ""
+        if lunarcrush_context:
+            social_intelligence = f"""
+
+SOCIAL INTELLIGENCE DATA:
+{lunarcrush_context}
+
+Consider this social data in your analysis, especially for Step 2 (Gathering Information) and Step 4 (Identify and Evaluate Factors).
+"""
+
         return f"""
         You are a Superforecaster tasked with correctly predicting the likelihood of events.
+
+        Today's date is {datetime.today().strftime('%Y-%m-%d')}.
+
         Use the following systematic process to develop an accurate prediction for the following
-        question=`{question}` and description=`{description}` combination. 
-        
+        question=`{question}` and description=`{description}` combination.
+
+        CRITICAL: If this event has already resolved (resolution date is in the past), immediately respond with:
+        "SKIP: This market has already resolved on [date]."
+{social_intelligence}
         Here are the key steps to use in your analysis:
 
         1. Breaking Down the Question:
@@ -143,6 +166,91 @@ class Prompter:
         I believe {question} has a likelihood `{float}` for outcome of `{str}`.
         """
 
+    def unified_trade_decision(
+        self,
+        question: str,
+        description: str,
+        outcomes: List[str],
+        outcome_prices: str,
+        lunarcrush_context: str = None
+    ) -> str:
+        """
+        Unified single-call prompt: Superforecaster analysis + trade decision.
+        Returns structured output in ONE LLM call (50% cost savings).
+        """
+        social_intelligence = ""
+        if lunarcrush_context:
+            social_intelligence = f"""
+
+SOCIAL INTELLIGENCE DATA:
+{lunarcrush_context}
+
+Consider this social data in your analysis.
+"""
+
+        return f"""
+You are a Superforecaster and disciplined Polymarket trader.
+
+Today's date is {datetime.today().strftime('%Y-%m-%d')}.
+
+MARKET QUESTION: {question}
+DESCRIPTION: {description}
+OUTCOMES: {outcomes}
+CURRENT PRICES: {outcome_prices}
+{social_intelligence}
+
+CRITICAL: If this event has already resolved (resolution date is in the past), immediately respond with:
+"SKIP: This market has already resolved on [date]."
+
+YOUR TASK (complete in ONE response):
+
+1. ANALYZE (Superforecaster methodology):
+   - Break down the question into components
+   - Gather relevant information from description
+   - Consider base rates and reference classes
+   - Identify key factors that affect the outcome
+   - Update beliefs as you analyze
+
+2. PREDICT:
+   - What is your probability estimate for each outcome?
+   - How confident are you (0-100)?
+
+3. TRADE DECISION:
+   - Buy the outcome you predict is MORE LIKELY
+   - Size based on conviction (not on finding "value")
+   - DO NOT try to outsmart your prediction with "value bets"
+
+REQUIRED OUTPUT FORMAT (JSON):
+```json
+{{
+  "our_probability_yes": 0.XX,
+  "confidence": XX,
+  "reasoning_short": "2-3 sentence summary of key factors",
+  "recommended_outcome": "Yes" or "No",
+  "max_entry_price": 0.XX,
+  "position_size_pct": 0.XX
+}}
+```
+
+CONSTRAINTS:
+- recommended_outcome MUST match higher probability (if prob_yes > 0.5, outcome is "Yes")
+- max_entry_price should be current market price from {outcome_prices}
+- position_size_pct: 0.01-0.15 (1-15% of capital, based on confidence)
+- confidence: 0-100 scale
+
+Example (if you think YES is 65% likely with medium confidence):
+```json
+{{
+  "our_probability_yes": 0.65,
+  "confidence": 70,
+  "reasoning_short": "Historical data shows strong correlation with similar events. Recent polls trending positive. Economic incentives align with YES outcome.",
+  "recommended_outcome": "Yes",
+  "max_entry_price": 0.58,
+  "position_size_pct": 0.08
+}}
+```
+"""
+
     def one_best_trade(
         self,
         prediction: str,
@@ -152,38 +260,47 @@ class Prompter:
         return (
             self.polymarket_analyst_api()
             + f"""
-        
-                Imagine yourself as the top trader on Polymarket, dominating the world of information markets with your keen insights and strategic acumen. You have an extraordinary ability to analyze and interpret data from diverse sources, turning complex information into profitable trading opportunities.
-                You excel in predicting the outcomes of global events, from political elections to economic developments, using a combination of data analysis and intuition. Your deep understanding of probability and statistics allows you to assess market sentiment and make informed decisions quickly.
-                Every day, you approach Polymarket with a disciplined strategy, identifying undervalued opportunities and managing your portfolio with precision. You are adept at evaluating the credibility of information and filtering out noise, ensuring that your trades are based on reliable data.
-                Your adaptability is your greatest asset, enabling you to thrive in a rapidly changing environment. You leverage cutting-edge technology and tools to gain an edge over other traders, constantly seeking innovative ways to enhance your strategies.
-                In your journey on Polymarket, you are committed to continuous learning, staying informed about the latest trends and developments in various sectors. Your emotional intelligence empowers you to remain composed under pressure, making rational decisions even when the stakes are high.
-                Visualize yourself consistently achieving outstanding returns, earning recognition as the top trader on Polymarket. You inspire others with your success, setting new standards of excellence in the world of information markets.
+
+                You are a disciplined Polymarket trader who follows a systematic approach:
+                1. Make probability predictions based on careful analysis
+                2. Always buy the outcome you predict is MORE LIKELY
+                3. Never try to outsmart your own predictions by buying "undervalued" outcomes
+                4. Size positions based on conviction, not on finding mispricings
+
+                Your edge comes from better predictions, not from trying to find value bets.
+                Trust your analysis and buy what you actually think will happen.
 
         """
             + f"""
-        
+
         You made the following prediction for a market: {prediction}
 
         The current outcomes ${outcomes} prices are: ${outcome_prices}
 
-        Given your prediction, respond with a genius trade in the format:
+        CRITICAL INSTRUCTION - FOLLOW EXACTLY:
+        You MUST buy the outcome you predicted is MORE LIKELY.
+        - If you think YES is more likely, choose outcome:'Yes'
+        - If you think NO is more likely, choose outcome:'No'
+
+        DO NOT try to find "value bets" or buy underpriced outcomes.
+        DO NOT buy the less likely outcome even if it seems mispriced.
+        ALWAYS buy the outcome with the HIGHER probability in your prediction.
+
+        Respond with your trade in this exact format:
         `
+            outcome:'Yes' or 'No',
             price:'price_on_the_orderbook',
             size:'percentage_of_total_funds',
-            side: BUY or SELL,
         `
 
-        Your trade should approximate price using the likelihood in your prediction.
-
-        Example response:
+        Example response (if you predicted YES is 60% likely):
 
         RESPONSE```
-            price:0.5,
+            outcome:'Yes',
+            price:0.6,
             size:0.1,
-            side:BUY,
         ```
-        
+
         """
         )
 

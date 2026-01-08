@@ -1,0 +1,3 @@
+"""
+CopyTrader test package.
+"""

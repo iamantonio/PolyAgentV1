@@ -7,6 +7,14 @@ from agents.connectors.news import News
 from agents.application.trade import Trader
 from agents.application.executor import Executor
 from agents.application.creator import Creator
+from agents.copytrader.executor import CopyTrader
+from agents.copytrader.risk_kernel import RiskKernel
+from agents.copytrader.allowlist import AllowlistService
+from agents.copytrader.position_tracker import PositionTracker
+from agents.copytrader.alerts import AlertService, AlertConfig
+from agents.copytrader.storage import CopyTraderDB
+from decimal import Decimal
+import os
 
 app = typer.Typer()
 polymarket = Polymarket()
@@ -122,6 +130,100 @@ def run_autonomous_trader() -> None:
     """
     trader = Trader()
     trader.one_best_trade()
+
+
+@app.command()
+def run_copytrader(
+    dry_run: bool = True,
+    db_path: str = "./copytrader_v1.db",
+    starting_capital: float = 1000.0,
+) -> None:
+    """
+    Run CopyTrader bot (Phase 0 + Phase 1).
+
+    Args:
+        dry_run: If True, skip actual execution (default: True for safety)
+        db_path: Path to SQLite database
+        starting_capital: Starting capital in dollars (default: $1000)
+    """
+    print("=" * 60)
+    print("CopyTrader v1 - Phase 0 + Phase 1")
+    print("=" * 60)
+    print(f"Mode: {'DRY RUN' if dry_run else 'LIVE TRADING'}")
+    print(f"Starting capital: ${starting_capital:.2f}")
+    print(f"Database: {db_path}")
+    print("=" * 60)
+
+    # Initialize components
+    print("\nInitializing components...")
+
+    # Database
+    db = CopyTraderDB(db_path)
+    print("✓ Database initialized")
+
+    # Risk kernel with v1 guardrails
+    risk_kernel = RiskKernel(
+        starting_capital=Decimal(str(starting_capital)),
+        daily_stop_pct=Decimal("-5.0"),  # -5% daily stop
+        hard_kill_pct=Decimal("-20.0"),  # -20% hard kill
+        per_trade_cap_pct=Decimal("3.0"),  # 3% per trade cap
+        max_positions=3,  # Max 3 positions
+        anomalous_loss_pct=Decimal("-5.0"),  # >5% single trade loss = kill
+    )
+    print("✓ Risk kernel initialized")
+
+    # Position tracker
+    tracker = PositionTracker(db, Decimal(str(starting_capital)))
+    print("✓ Position tracker initialized")
+
+    # Allowlist service
+    allowlist = AllowlistService()
+    try:
+        allowlist.refresh_politics_markets()
+        print(f"✓ Allowlist initialized ({len(allowlist.get_allowlist())} markets)")
+    except Exception as e:
+        print(f"✗ Allowlist refresh failed: {e}")
+        print("Bot will fail-closed (no trades allowed)")
+
+    # Alert service
+    alert_config = AlertConfig(
+        enabled=True,
+        bot_token=os.getenv("TELEGRAM_BOT_TOKEN"),
+        chat_id=os.getenv("TELEGRAM_CHAT_ID"),
+    )
+    alerts = AlertService(alert_config)
+    print("✓ Alert service initialized")
+
+    # Polymarket client
+    polymarket_client = Polymarket()
+    print("✓ Polymarket client initialized")
+
+    # CopyTrader executor
+    copytrader = CopyTrader(
+        polymarket=polymarket_client,
+        risk_kernel=risk_kernel,
+        allowlist=allowlist,
+        tracker=tracker,
+        alerts=alerts,
+        dry_run=dry_run,
+    )
+    print("✓ CopyTrader executor initialized")
+
+    # Get status
+    print("\n" + "=" * 60)
+    print("Bot Status:")
+    print("=" * 60)
+    status = copytrader.get_status()
+    pprint(status)
+
+    print("\n" + "=" * 60)
+    print("CopyTrader initialized and ready.")
+    print("=" * 60)
+    print("\nNOTE: This command initializes the bot.")
+    print("To process trade intents, you need to:")
+    print("1. Implement intent ingestion (e.g., from external signal source)")
+    print("2. Call copytrader.process_intent(intent) for each trade signal")
+    print("\nSee docs/CopyTraderV1.md for full setup and usage.")
 
 
 if __name__ == "__main__":
