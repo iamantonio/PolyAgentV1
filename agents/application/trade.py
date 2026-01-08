@@ -48,8 +48,12 @@ class Trader:
             print()
             print(f"3. FOUND {len(markets)} MARKETS")
 
+            # Phase 0: Cheap pre-filter BEFORE expensive LLM calls
+            pre_filtered_markets = self.agent.market_filter.filter_markets(markets)
+            print(f"3b. PRE-FILTERED {len(pre_filtered_markets)} MARKETS (cheap filters)")
+
             print()
-            filtered_markets = self.agent.filter_markets(markets)
+            filtered_markets = self.agent.filter_markets(pre_filtered_markets)
             print(f"4. FILTERED {len(filtered_markets)} MARKETS")
 
             market = filtered_markets[0]

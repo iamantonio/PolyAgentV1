@@ -28,7 +28,7 @@ from scripts.python.test_autonomous_trader import SafeAutonomousTrader
 
 # CONFIGURATION
 ARBITRAGE_SCAN_INTERVAL = 30  # Scan for arbitrage every 30 seconds
-AI_PREDICTION_INTERVAL = 300  # Run AI prediction every 5 minutes
+AI_PREDICTION_INTERVAL = 1800  # Run AI prediction every 30 minutes (Phase 0 optimization)
 ERROR_COOLDOWN = 60  # Wait 60 seconds after errors
 MAX_CONSECUTIVE_ERRORS = 5  # Shutdown after 5 consecutive errors
 

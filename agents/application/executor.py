@@ -17,6 +17,8 @@ from agents.utils.objects import SimpleEvent, SimpleMarket
 from agents.application.prompts import Prompter
 from agents.polymarket.polymarket import Polymarket
 from agents.application.budget_enforcer import BudgetEnforcer
+from agents.application.forecast_cache import ForecastCache
+from agents.application.market_filter import MarketFilter
 
 def retain_keys(data, keys_to_retain):
     if isinstance(data, dict):
@@ -68,6 +70,8 @@ class Executor:
         self.chroma = Chroma()
         self.polymarket = Polymarket()
         self.budget = BudgetEnforcer()
+        self.forecast_cache = ForecastCache()
+        self.market_filter = MarketFilter()
 
     def _safe_llm_call(self, messages: list, market_id: Optional[str] = None) -> Optional[str]:
         """
@@ -213,6 +217,7 @@ class Executor:
         """
         Unified single-LLM-call version of source_best_trade.
         50% cost savings by combining analysis + trade decision into ONE call.
+        Plus: cache + market change gate for additional savings.
         """
         market_document = market_object[0].dict()
         market = market_document["metadata"]
@@ -222,7 +227,26 @@ class Executor:
         description = market_document["page_content"]
         market_id = market.get("condition_id", "unknown")
 
+        # Get current market price (average of outcome prices)
+        current_price = sum(outcome_prices) / len(outcome_prices) if outcome_prices else 0.5
+
+        # CHECK CACHE + MARKET CHANGE GATE
+        should_forecast, skip_reason = self.forecast_cache.should_forecast(market_id, current_price)
+
+        if not should_forecast:
+            print(f"💰 [CACHE] Skipping forecast: {skip_reason}")
+
+            # Try to return cached forecast
+            cached = self.forecast_cache.get_cached_forecast(market_id, current_price)
+            if cached:
+                print(f"   Returning cached forecast")
+                return cached
+            else:
+                # Skip this market entirely
+                return f"SKIP: {skip_reason}"
+
         # SINGLE LLM CALL: Combined analysis + trade decision
+        print(f"🔮 [FORECAST] New forecast for {market_id[:12]}... (price: {current_price:.3f})")
         prompt = self.prompter.unified_trade_decision(
             question, description, outcomes, str(outcome_prices), lunarcrush_context
         )
@@ -260,7 +284,13 @@ class Executor:
             price = trade_data["max_entry_price"]
             size = trade_data["position_size_pct"]
 
-            return f"outcome:'{outcome}',price:{price},size:{size},"
+            result = f"outcome:'{outcome}',price:{price},size:{size},"
+
+            # CACHE THE FORECAST
+            self.forecast_cache.cache_forecast(market_id, current_price, result)
+            print(f"💾 [CACHE] Forecast cached for {market_id[:12]}...")
+
+            return result
 
         except (json.JSONDecodeError, KeyError) as e:
             print(f"⚠️ Failed to parse unified response: {e}")
