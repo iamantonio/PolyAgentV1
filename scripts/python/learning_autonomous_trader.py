@@ -1164,6 +1164,12 @@ Keep it simple and fast."""
             size = pos['size']
             outcome = pos['predicted_outcome']
 
+            # Validate position data before processing
+            if entry_price is None or size is None:
+                print(f"Position: {question[:60]}...")
+                print(f"  ⚠️  Incomplete position data (entry_price={entry_price}, size={size}), skipping")
+                continue
+
             print(f"Position: {question[:60]}...")
             print(f"  Entry: ${entry_price:.4f} | Size: ${size:.2f} | Outcome: {outcome}")
 
