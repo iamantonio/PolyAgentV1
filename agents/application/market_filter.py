@@ -6,11 +6,15 @@ Filters out markets that are unlikely to be profitable to trade:
 - Wide spreads
 - Extreme prices (near 0 or 1)
 - Too close to resolution
+
+Enhanced with opportunity scoring to prioritize high-value markets.
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 from datetime import datetime, timezone
 import ast
+
+from agents.application.opportunity_scorer import OpportunityScorer
 
 
 class MarketFilter:
@@ -26,13 +30,26 @@ class MarketFilter:
         max_spread_pct: float = 5.0,  # Max 5% spread
         min_price: float = 0.10,  # Avoid prices < 10 cents
         max_price: float = 0.90,  # Avoid prices > 90 cents
-        min_hours_to_close: float = 24.0  # Avoid markets closing < 24h
+        min_hours_to_close: float = 24.0,  # Avoid markets closing < 24h
+        enable_opportunity_scoring: bool = True,  # Enable opportunity scoring
+        min_opportunity_score: float = 40.0  # Min score to consider (0-100)
     ):
         self.min_liquidity = min_liquidity
         self.max_spread = max_spread_pct / 100
         self.min_price = min_price
         self.max_price = max_price
         self.min_seconds_to_close = min_hours_to_close * 3600
+        self.enable_opportunity_scoring = enable_opportunity_scoring
+        self.min_opportunity_score = min_opportunity_score
+
+        # Initialize opportunity scorer
+        if self.enable_opportunity_scoring:
+            self.opportunity_scorer = OpportunityScorer(
+                enable_social_signals=False,  # Disable for speed in filtering
+                enable_volatility=True
+            )
+        else:
+            self.opportunity_scorer = None
 
     def should_consider_market(self, market_object) -> Tuple[bool, Optional[str]]:
         """
@@ -82,12 +99,22 @@ class MarketFilter:
             # If we can't parse the market, skip it
             return False, f"Failed to parse market: {e}"
 
-    def filter_markets(self, markets: List) -> List:
+    def filter_markets(
+        self,
+        markets: List,
+        return_scored: bool = False
+    ) -> List:
         """
         Filter list of markets, keeping only candidates worth forecasting.
 
+        With opportunity scoring enabled, returns markets sorted by score.
+
+        Args:
+            markets: List of market objects
+            return_scored: If True, return (market, score_data) tuples instead of just markets
+
         Returns:
-            Filtered list of markets + statistics
+            Filtered (and optionally scored) list of markets
         """
         if not markets:
             return []
@@ -114,6 +141,25 @@ class MarketFilter:
             for reason, count in sorted(rejected_reasons.items(), key=lambda x: -x[1]):
                 print(f"     - {reason}: {count}")
 
+        # Opportunity scoring (optional)
+        if self.enable_opportunity_scoring and self.opportunity_scorer and candidates:
+            print(f"\n📊 [OPPORTUNITY SCORING] Enabled")
+
+            scored_markets = self.opportunity_scorer.score_markets(candidates)
+
+            # Filter by minimum score
+            scored_markets = [
+                (market, score) for market, score in scored_markets
+                if score["total_score"] >= self.min_opportunity_score
+            ]
+
+            print(f"   Markets above threshold ({self.min_opportunity_score}): {len(scored_markets)}")
+
+            if return_scored:
+                return scored_markets
+            else:
+                return [market for market, score in scored_markets]
+
         return candidates
 
     def get_config(self) -> dict:
@@ -122,5 +168,35 @@ class MarketFilter:
             "min_liquidity": self.min_liquidity,
             "max_spread_pct": self.max_spread * 100,
             "price_range": f"{self.min_price:.2f}-{self.max_price:.2f}",
-            "min_hours_to_close": self.min_seconds_to_close / 3600
+            "min_hours_to_close": self.min_seconds_to_close / 3600,
+            "opportunity_scoring_enabled": self.enable_opportunity_scoring,
+            "min_opportunity_score": self.min_opportunity_score
         }
+
+    def allocate_budget_to_markets(
+        self,
+        scored_markets: List[Tuple[Any, Dict[str, Any]]],
+        daily_budget: float,
+        top_n: int = 10
+    ) -> Dict[str, float]:
+        """
+        Allocate budget to top-scoring markets.
+
+        This is a convenience wrapper around OpportunityScorer.allocate_budget.
+
+        Args:
+            scored_markets: List of (market, score_data) tuples
+            daily_budget: Total daily budget
+            top_n: Number of top markets to fund
+
+        Returns:
+            Dict mapping market_id -> allocated_budget
+        """
+        if not self.opportunity_scorer:
+            raise ValueError("Opportunity scoring not enabled")
+
+        return self.opportunity_scorer.allocate_budget(
+            scored_markets,
+            daily_budget,
+            top_n
+        )

@@ -342,8 +342,11 @@ class Executor:
 
     def format_trade_prompt_for_execution(self, best_trade: str) -> float:
         data = best_trade.split(",")
-        # price = re.findall("\d+\.\d+", data[0])[0]
-        size = re.findall("\d+\.\d+", data[1])[0]
+        # Trade format: "outcome:'Yes',price:0.58,size:0.08,"
+        # data[0] = "outcome:'Yes'"
+        # data[1] = "price:0.58"
+        # data[2] = "size:0.08" ← Extract from here!
+        size = re.findall("\d+\.\d+", data[2])[0]  # FIXED: Was data[1] (price), now data[2] (size)
         usdc_balance = self.polymarket.get_usdc_balance()
         return float(size) * usdc_balance
 

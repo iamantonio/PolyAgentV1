@@ -205,16 +205,39 @@ class Polymarket:
         print(ctf_approval_tx_receipt)
 
     def get_all_markets(self) -> "list[SimpleMarket]":
+        import time
+        from agents.utils.validation_logger import validation_logger
+
         markets = []
-        res = httpx.get(self.gamma_markets_endpoint)
-        if res.status_code == 200:
-            for market in res.json():
-                try:
-                    market_data = self.map_api_to_market(market)
-                    markets.append(SimpleMarket(**market_data))
-                except Exception as e:
-                    print(e)
-                    pass
+        start_time = time.time()
+
+        try:
+            res = httpx.get(self.gamma_markets_endpoint)
+            duration_ms = (time.time() - start_time) * 1000
+
+            if res.status_code == 200:
+                raw_markets = res.json()
+                response_count = len(raw_markets) if isinstance(raw_markets, list) else None
+                validation_logger.log_api_call("polymarket_get_all_markets", success=True,
+                                              duration_ms=duration_ms, response_count=response_count)
+                for market in raw_markets:
+                    try:
+                        market_data = self.map_api_to_market(market)
+                        markets.append(SimpleMarket(**market_data))
+                    except Exception as e:
+                        # VALIDATION EXPERIMENT: Log individual market parse failures
+                        validation_logger.log_api_call("polymarket_parse_market", success=False, error_msg=str(e))
+                        print(e)
+                        pass
+            else:
+                validation_logger.log_api_call("polymarket_get_all_markets", success=False,
+                                              error_msg=f"HTTP {res.status_code}", duration_ms=duration_ms)
+        except Exception as e:
+            duration_ms = (time.time() - start_time) * 1000
+            validation_logger.log_api_call("polymarket_get_all_markets", success=False,
+                                          error_msg=str(e), duration_ms=duration_ms)
+            raise
+
         return markets
 
     def filter_markets_for_trading(self, markets: "list[SimpleMarket]"):

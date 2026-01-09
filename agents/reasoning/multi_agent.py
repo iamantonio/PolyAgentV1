@@ -55,15 +55,40 @@ class MultiAgentReasoning:
     4. Verification catches errors
     """
 
-    def __init__(self, openai_api_key: Optional[str] = None):
-        if openai_api_key is None:
-            openai_api_key = os.getenv("OPENAI_API_KEY")
+    def __init__(self, openai_api_key: Optional[str] = None, use_xai: bool = True):
+        """
+        Initialize multi-agent reasoning with XAI (Grok) or OpenAI.
 
-        self.client = OpenAI(api_key=openai_api_key)
+        Args:
+            openai_api_key: API key (optional, reads from env)
+            use_xai: If True, use XAI/Grok (default). If False, use OpenAI.
+        """
+        self.use_xai = use_xai
+
+        if use_xai:
+            # Use XAI (Grok-4) - OpenAI-compatible API
+            api_key = os.getenv("XAI_API_KEY")
+            if not api_key:
+                raise ValueError("XAI_API_KEY not found in environment")
+
+            self.client = OpenAI(
+                api_key=api_key,
+                base_url="https://api.x.ai/v1"
+            )
+            self.model = "grok-4-1-fast-reasoning"  # XAI's reasoning model
+            self.provider = "XAI (Grok-4.1-Fast-Reasoning)"
+        else:
+            # Use OpenAI
+            if openai_api_key is None:
+                openai_api_key = os.getenv("OPENAI_API_KEY")
+
+            self.client = OpenAI(api_key=openai_api_key)
+            self.model = "gpt-4"
+            self.provider = "OpenAI"
 
     def health_check(self) -> Tuple[bool, str]:
         """
-        Test OpenAI API access before trading.
+        Test API access before trading.
         Returns (is_healthy: bool, error_message: str)
 
         Distinguishes between:
@@ -72,8 +97,11 @@ class MultiAgentReasoning:
         - rate_limit (backoff)
         """
         try:
-            # Use configurable model (default: cheaper/widely available)
-            healthcheck_model = os.getenv("OPENAI_HEALTHCHECK_MODEL", "gpt-4o-mini")
+            # Use appropriate test model based on provider
+            if self.use_xai:
+                healthcheck_model = "grok-4-1-fast-reasoning"
+            else:
+                healthcheck_model = os.getenv("OPENAI_HEALTHCHECK_MODEL", "gpt-4o-mini")
 
             # Minimal test call (costs ~$0.0001)
             response = self.client.chat.completions.create(
@@ -81,7 +109,7 @@ class MultiAgentReasoning:
                 messages=[{"role": "user", "content": "test"}],
                 max_tokens=5
             )
-            return (True, "OK")
+            return (True, f"OK - Using {self.provider}")
 
         except Exception as e:
             error_str = str(e)
@@ -123,9 +151,10 @@ class MultiAgentReasoning:
                         f"Message: {error_message}")
 
             elif error_status == 401 or "AuthenticationError" in error_type:
+                api_key_var = "XAI_API_KEY" if self.use_xai else "OPENAI_API_KEY"
                 return (False,
                     f"AUTH FAILED (HTTP 401)\n"
-                    f"Fix: Check OPENAI_API_KEY or org/project settings\n"
+                    f"Fix: Check {api_key_var} or org/project settings\n"
                     f"Message: {error_message}")
 
             elif error_status == 403 or "PermissionDeniedError" in error_type:
@@ -135,9 +164,10 @@ class MultiAgentReasoning:
                     f"Message: {error_message}")
 
             elif error_status == 404 or "NotFoundError" in error_type:
+                provider_hint = "grok-4-1-fast-reasoning for XAI" if self.use_xai else "gpt-4o-mini for OpenAI"
                 return (False,
                     f"MODEL NOT FOUND (HTTP 404)\n"
-                    f"Fix: Set OPENAI_HEALTHCHECK_MODEL to available model (e.g., gpt-4o-mini)\n"
+                    f"Fix: Use correct model ({provider_hint})\n"
                     f"Model tried: {healthcheck_model}\n"
                     f"Message: {error_message}")
 
@@ -198,7 +228,7 @@ CONTRADICTING: [evidence against this prediction]
 """
 
         response = self.client.chat.completions.create(
-            model="gpt-4",
+            model=self.model,  # Use configured model (grok-beta or gpt-4)
             messages=[
                 {"role": "system", "content": "You are an expert prediction analyst."},
                 {"role": "user", "content": prompt}
@@ -289,7 +319,7 @@ RED_FLAGS: [major concerns]
 """
 
         response = self.client.chat.completions.create(
-            model="gpt-4",
+            model=self.model,  # Use configured model (grok-beta or gpt-4)
             messages=[
                 {"role": "system", "content": "You are a skeptical critic finding flaws in predictions."},
                 {"role": "user", "content": prompt}
@@ -374,7 +404,7 @@ VERIFICATION: I am buying [outcome] because I think it has [probability]% chance
 """
 
         response = self.client.chat.completions.create(
-            model="gpt-4",
+            model=self.model,  # Use configured model (grok-beta or gpt-4)
             messages=[
                 {"role": "system", "content": "You are a careful decision maker who verifies logic."},
                 {"role": "user", "content": prompt}

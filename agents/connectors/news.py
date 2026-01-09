@@ -37,9 +37,22 @@ class News:
         return article_objects
 
     def get_top_articles_for_market(self, market_object: dict) -> "list[Article]":
-        return self.API.get_top_headlines(
-            language="en", country="usa", q=market_object["description"]
-        )
+        import time
+        from agents.utils.validation_logger import validation_logger
+
+        start_time = time.time()
+        try:
+            result = self.API.get_top_headlines(
+                language="en", country="usa", q=market_object["description"]
+            )
+            duration_ms = (time.time() - start_time) * 1000
+            validation_logger.log_api_call("news_get_top_headlines", success=True, duration_ms=duration_ms)
+            return result
+        except Exception as e:
+            duration_ms = (time.time() - start_time) * 1000
+            validation_logger.log_api_call("news_get_top_headlines", success=False,
+                                          error_msg=str(e), duration_ms=duration_ms)
+            raise
 
     def get_articles_for_options(
         self,
@@ -47,29 +60,51 @@ class News:
         date_start: datetime = None,
         date_end: datetime = None,
     ) -> "list[Article]":
+        import time
+        from agents.utils.validation_logger import validation_logger
 
         all_articles = {}
         # Default to top articles if no start and end dates are given for search
         if not date_start and not date_end:
             for option in market_options:
-                response_dict = self.API.get_top_headlines(
-                    q=option.strip(),
-                    language=self.configs["language"],
-                    country=self.configs["country"],
-                )
-                articles = response_dict["articles"]
-                all_articles[option] = articles
+                start_time = time.time()
+                try:
+                    response_dict = self.API.get_top_headlines(
+                        q=option.strip(),
+                        language=self.configs["language"],
+                        country=self.configs["country"],
+                    )
+                    duration_ms = (time.time() - start_time) * 1000
+                    validation_logger.log_api_call("news_get_headlines_for_option", success=True, duration_ms=duration_ms)
+                    articles = response_dict["articles"]
+                    all_articles[option] = articles
+                except Exception as e:
+                    duration_ms = (time.time() - start_time) * 1000
+                    validation_logger.log_api_call("news_get_headlines_for_option", success=False,
+                                                  error_msg=str(e), duration_ms=duration_ms)
+                    # Continue with other options even if one fails
+                    print(f"Failed to get news for {option}: {e}")
         else:
             for option in market_options:
-                response_dict = self.API.get_everything(
-                    q=option.strip(),
-                    language=self.configs["language"],
-                    country=self.configs["country"],
-                    from_param=date_start,
-                    to=date_end,
-                )
-                articles = response_dict["articles"]
-                all_articles[option] = articles
+                start_time = time.time()
+                try:
+                    response_dict = self.API.get_everything(
+                        q=option.strip(),
+                        language=self.configs["language"],
+                        country=self.configs["country"],
+                        from_param=date_start,
+                        to=date_end,
+                    )
+                    duration_ms = (time.time() - start_time) * 1000
+                    validation_logger.log_api_call("news_get_everything_for_option", success=True, duration_ms=duration_ms)
+                    articles = response_dict["articles"]
+                    all_articles[option] = articles
+                except Exception as e:
+                    duration_ms = (time.time() - start_time) * 1000
+                    validation_logger.log_api_call("news_get_everything_for_option", success=False,
+                                                  error_msg=str(e), duration_ms=duration_ms)
+                    # Continue with other options even if one fails
+                    print(f"Failed to get news for {option}: {e}")
 
         return all_articles
 

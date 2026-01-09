@@ -26,9 +26,13 @@ sys.path.insert(0, '/home/tony/Dev/agents')
 from scripts.python.hybrid_autonomous_trader import HybridAutonomousTrader
 from scripts.python.test_autonomous_trader import SafeAutonomousTrader
 
+# Import position manager for exit strategies
+from agents.application.position_manager import PositionManager
+
 # CONFIGURATION
 ARBITRAGE_SCAN_INTERVAL = 30  # Scan for arbitrage every 30 seconds
 AI_PREDICTION_INTERVAL = 1800  # Run AI prediction every 30 minutes (Phase 0 optimization)
+POSITION_CHECK_INTERVAL = 30  # Check positions for exits every 30 seconds
 ERROR_COOLDOWN = 60  # Wait 60 seconds after errors
 MAX_CONSECUTIVE_ERRORS = 5  # Shutdown after 5 consecutive errors
 
@@ -49,7 +53,9 @@ class ContinuousTrader:
         self.running = False
         self.arbitrage_trader = None
         self.ai_trader = None
+        self.position_manager = None
         self.last_ai_scan = None
+        self.last_position_check = None
         self.consecutive_errors = 0
 
         # Statistics
@@ -57,7 +63,9 @@ class ContinuousTrader:
             'started_at': datetime.now().isoformat(),
             'arbitrage_scans': 0,
             'ai_scans': 0,
+            'position_checks': 0,
             'trades_executed': 0,
+            'exits_executed': 0,
             'errors': 0
         }
 
@@ -99,13 +107,33 @@ class ContinuousTrader:
         print(f"Runtime: {runtime}")
         print(f"Arbitrage scans: {self.stats['arbitrage_scans']}")
         print(f"AI scans: {self.stats['ai_scans']}")
+        print(f"Position checks: {self.stats['position_checks']}")
         print(f"Trades executed: {self.stats['trades_executed']}")
+        print(f"Exits executed: {self.stats['exits_executed']}")
         print(f"Errors: {self.stats['errors']}")
         print(f"{'='*60}\n")
+
+        # Print position manager metrics
+        if self.position_manager:
+            metrics = self.position_manager.get_performance_metrics()
+            if metrics['total_positions'] > 0:
+                print(f"\n{'='*60}")
+                print("💰 POSITION PERFORMANCE")
+                print(f"{'='*60}")
+                print(f"Total closed: {metrics['total_positions']}")
+                print(f"Win rate: {metrics['win_rate']:.1f}%")
+                print(f"Total PnL: ${metrics['total_pnl']:+.2f}")
+                print(f"Avg PnL: {metrics['avg_pnl_pct']:+.2f}%")
+                print(f"Best trade: ${metrics['best_trade']:+.2f}")
+                print(f"Worst trade: ${metrics['worst_trade']:+.2f}")
+                print(f"{'='*60}\n")
 
     def _initialize_traders(self):
         """Initialize trading bot instances."""
         try:
+            self._log("Initializing position manager...")
+            self.position_manager = PositionManager()
+
             self._log("Initializing arbitrage trader...")
             self.arbitrage_trader = HybridAutonomousTrader()
 
@@ -177,6 +205,46 @@ class ContinuousTrader:
         elapsed = (datetime.now() - self.last_ai_scan).total_seconds()
         return elapsed >= AI_PREDICTION_INTERVAL
 
+    def _should_check_positions(self):
+        """Check if it's time to check positions for exits."""
+        if self.last_position_check is None:
+            return True
+
+        elapsed = (datetime.now() - self.last_position_check).total_seconds()
+        return elapsed >= POSITION_CHECK_INTERVAL
+
+    def _check_positions(self):
+        """Check all open positions for exit conditions."""
+        try:
+            self._log("🔍 Checking open positions for exits...")
+            self.stats['position_checks'] += 1
+            self.last_position_check = datetime.now()
+
+            open_positions = self.position_manager.get_open_positions()
+
+            if not open_positions:
+                self._log("No open positions to check")
+                return
+
+            # TODO: Get current prices from Polymarket API
+            # For now, just print status
+            for pos in open_positions:
+                self._log(f"   Tracking: {pos.market_question[:50]}... | "
+                         f"Entry: ${pos.entry_price:.4f} | "
+                         f"PnL: {pos.unrealized_pnl_pct:+.1f}%")
+
+            # Print status every 10 checks
+            if self.stats['position_checks'] % 10 == 0:
+                self.position_manager.print_status()
+
+            self.consecutive_errors = 0
+
+        except Exception as e:
+            self.consecutive_errors += 1
+            self.stats['errors'] += 1
+            self._log(f"❌ Position check error: {e}", "ERROR")
+            self._log(traceback.format_exc(), "ERROR")
+
     def _check_error_threshold(self):
         """Check if too many consecutive errors."""
         if self.consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
@@ -210,6 +278,10 @@ class ContinuousTrader:
                 # Check error threshold
                 if not self._check_error_threshold():
                     break
+
+                # PRIORITY 0: Check positions for exits (critical!)
+                if self._should_check_positions():
+                    self._check_positions()
 
                 # PRIORITY 1: Scan for arbitrage (fast, frequent)
                 self._scan_arbitrage()

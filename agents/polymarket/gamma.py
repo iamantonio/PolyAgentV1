@@ -71,51 +71,85 @@ class GammaMarketClient:
     def get_markets(
         self, querystring_params={}, parse_pydantic=False, local_file_path=None
     ) -> "list[Market]":
+        import time
+        from agents.utils.validation_logger import validation_logger
+
         if parse_pydantic and local_file_path is not None:
             raise Exception(
                 'Cannot use "parse_pydantic" and "local_file" params simultaneously.'
             )
 
-        response = httpx.get(self.gamma_markets_endpoint, params=querystring_params)
-        if response.status_code == 200:
-            data = response.json()
-            if local_file_path is not None:
-                with open(local_file_path, "w+") as out_file:
-                    json.dump(data, out_file)
-            elif not parse_pydantic:
-                return data
+        start_time = time.time()
+        try:
+            response = httpx.get(self.gamma_markets_endpoint, params=querystring_params)
+            duration_ms = (time.time() - start_time) * 1000
+
+            if response.status_code == 200:
+                data = response.json()
+                response_count = len(data) if isinstance(data, list) else None
+                validation_logger.log_api_call("gamma_get_markets", success=True,
+                                              duration_ms=duration_ms, response_count=response_count)
+                if local_file_path is not None:
+                    with open(local_file_path, "w+") as out_file:
+                        json.dump(data, out_file)
+                elif not parse_pydantic:
+                    return data
+                else:
+                    markets: list[Market] = []
+                    for market_object in data:
+                        markets.append(self.parse_pydantic_market(market_object))
+                    return markets
             else:
-                markets: list[Market] = []
-                for market_object in data:
-                    markets.append(self.parse_pydantic_market(market_object))
-                return markets
-        else:
-            print(f"Error response returned from api: HTTP {response.status_code}")
-            raise Exception()
+                validation_logger.log_api_call("gamma_get_markets", success=False,
+                                              error_msg=f"HTTP {response.status_code}", duration_ms=duration_ms)
+                print(f"Error response returned from api: HTTP {response.status_code}")
+                raise Exception()
+        except Exception as e:
+            duration_ms = (time.time() - start_time) * 1000
+            validation_logger.log_api_call("gamma_get_markets", success=False,
+                                          error_msg=str(e), duration_ms=duration_ms)
+            raise
 
     def get_events(
         self, querystring_params={}, parse_pydantic=False, local_file_path=None
     ) -> "list[PolymarketEvent]":
+        import time
+        from agents.utils.validation_logger import validation_logger
+
         if parse_pydantic and local_file_path is not None:
             raise Exception(
                 'Cannot use "parse_pydantic" and "local_file" params simultaneously.'
             )
 
-        response = httpx.get(self.gamma_events_endpoint, params=querystring_params)
-        if response.status_code == 200:
-            data = response.json()
-            if local_file_path is not None:
-                with open(local_file_path, "w+") as out_file:
-                    json.dump(data, out_file)
-            elif not parse_pydantic:
-                return data
+        start_time = time.time()
+        try:
+            response = httpx.get(self.gamma_events_endpoint, params=querystring_params)
+            duration_ms = (time.time() - start_time) * 1000
+
+            if response.status_code == 200:
+                data = response.json()
+                response_count = len(data) if isinstance(data, list) else None
+                validation_logger.log_api_call("gamma_get_events", success=True,
+                                              duration_ms=duration_ms, response_count=response_count)
+                if local_file_path is not None:
+                    with open(local_file_path, "w+") as out_file:
+                        json.dump(data, out_file)
+                elif not parse_pydantic:
+                    return data
+                else:
+                    events: list[PolymarketEvent] = []
+                    for market_event_obj in data:
+                        events.append(self.parse_event(market_event_obj))
+                    return events
             else:
-                events: list[PolymarketEvent] = []
-                for market_event_obj in data:
-                    events.append(self.parse_event(market_event_obj))
-                return events
-        else:
-            raise Exception()
+                validation_logger.log_api_call("gamma_get_events", success=False,
+                                              error_msg=f"HTTP {response.status_code}", duration_ms=duration_ms)
+                raise Exception()
+        except Exception as e:
+            duration_ms = (time.time() - start_time) * 1000
+            validation_logger.log_api_call("gamma_get_events", success=False,
+                                          error_msg=str(e), duration_ms=duration_ms)
+            raise
 
     def get_all_markets(self, limit=2) -> "list[Market]":
         return self.get_markets(querystring_params={"limit": limit})

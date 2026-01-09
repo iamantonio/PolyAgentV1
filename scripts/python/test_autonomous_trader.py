@@ -421,9 +421,10 @@ class SafeAutonomousTrader:
                             token_id = clob_token_ids[i]
                             break
                     else:
-                        # Default to first outcome if no match
-                        print(f"  ⚠️ Could not match outcome '{trade_outcome}' to {outcomes_list}, using first outcome")
-                        token_id = clob_token_ids[0]
+                        # FIXED: ABORT trade instead of guessing - betting on wrong side = guaranteed loss!
+                        error_msg = f"Could not match outcome '{trade_outcome}' to {outcomes_list}. ABORTING for safety."
+                        print(f"  ❌ {error_msg}")
+                        raise ValueError(error_msg)
 
                 print(f"Creating order:")
                 print(f"  Outcome: {trade_outcome}")

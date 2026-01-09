@@ -67,7 +67,9 @@ class ArbitrageDetector:
         total_cost = Decimal(str(yes_price)) + Decimal(str(no_price))
 
         # Account for fees and gas
-        effective_cost = total_cost + Decimal(str(self.trading_fee_pct)) + Decimal(str(self.gas_cost_usdc))
+        # FIXED: trading_fee_pct is a percentage (0.01 = 1%), must multiply by total_cost
+        fee_amount = total_cost * Decimal(str(self.trading_fee_pct))
+        effective_cost = total_cost + fee_amount + Decimal(str(self.gas_cost_usdc))
 
         # Must be profitable after fees
         if effective_cost >= Decimal('0.99'):
@@ -114,7 +116,8 @@ class ArbitrageDetector:
 
         # Account for fees and gas (multiple trades)
         num_outcomes = len(outcome_prices)
-        total_fees = Decimal(str(self.trading_fee_pct * num_outcomes))
+        # FIXED: trading_fee_pct is a percentage (0.01 = 1%), must multiply by total_cost
+        total_fees = total_cost * Decimal(str(self.trading_fee_pct))
         total_gas = Decimal(str(self.gas_cost_usdc * num_outcomes))
         effective_cost = total_cost + total_fees + total_gas
 
