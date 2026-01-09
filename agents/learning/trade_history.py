@@ -396,6 +396,7 @@ class TradeHistoryDB:
                 SUM(CASE WHEN trade_executed = 1 THEN 1 ELSE 0 END) as trades_executed,
                 SUM(CASE WHEN was_correct = 1 THEN 1 ELSE 0 END) as correct_predictions,
                 SUM(CASE WHEN was_correct = 0 THEN 1 ELSE 0 END) as incorrect_predictions,
+                SUM(CASE WHEN profit_loss_usdc > 0 THEN 1 ELSE 0 END) as profitable_trades,
                 SUM(profit_loss_usdc) as total_pnl,
                 AVG(confidence) as avg_confidence,
                 COUNT(CASE WHEN actual_outcome IS NOT NULL THEN 1 END) as resolved_markets
@@ -418,13 +419,15 @@ class TradeHistoryDB:
         total = row['total_predictions']
         resolved = row['resolved_markets']
         correct = row['correct_predictions'] if row['correct_predictions'] else 0
+        profitable = row['profitable_trades'] if row['profitable_trades'] else 0
 
         return {
             "total_predictions": total,
             "trades_executed": row['trades_executed'],
             "resolved_markets": resolved,
             "pending_markets": total - resolved,
-            "win_rate": correct / resolved if resolved > 0 else None,
+            "win_rate": profitable / resolved if resolved > 0 else None,
+            "prediction_accuracy": correct / resolved if resolved > 0 else None,
             "total_pnl_usdc": row['total_pnl'],
             "avg_confidence": row['avg_confidence'],
             "brier_score": self.calculate_brier_score(market_type, strategy, days)
@@ -476,7 +479,8 @@ class TradeHistoryDB:
             SELECT
                 market_type,
                 COUNT(*) as total_trades,
-                SUM(CASE WHEN was_correct = 1 THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN was_correct = 1 THEN 1 ELSE 0 END) as correct_predictions,
+                SUM(CASE WHEN profit_loss_usdc > 0 THEN 1 ELSE 0 END) as profitable_trades,
                 SUM(profit_loss_usdc) as total_pnl,
                 AVG(profit_loss_usdc) as avg_pnl_per_trade
             FROM predictions
@@ -488,11 +492,13 @@ class TradeHistoryDB:
         for row in cursor.fetchall():
             market_type = row['market_type'] or 'unknown'
             total = row['total_trades']
-            wins = row['wins'] if row['wins'] else 0
+            correct = row['correct_predictions'] if row['correct_predictions'] else 0
+            profitable = row['profitable_trades'] if row['profitable_trades'] else 0
 
             results[market_type] = {
                 "total_trades": total,
-                "win_rate": wins / total if total > 0 else 0,
+                "win_rate": profitable / total if total > 0 else 0,
+                "prediction_accuracy": correct / total if total > 0 else 0,
                 "total_pnl": row['total_pnl'],
                 "avg_pnl_per_trade": row['avg_pnl_per_trade'],
                 "has_edge": row['avg_pnl_per_trade'] > 0 if row['avg_pnl_per_trade'] else False
