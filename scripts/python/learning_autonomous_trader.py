@@ -66,7 +66,7 @@ MIN_SAMPLE_SIZE = 20  # Minimum trades before trusting learning
 BANKROLL = 100.0  # Available capital in USDC
 
 # Risk Management - Exposure Cap
-MAX_OPEN_EXPOSURE_PCT = 0.50  # Never exceed 50% of bankroll in open positions
+MAX_OPEN_EXPOSURE_PCT = 2.00  # Never exceed 200% of bankroll in open positions (allows $200 exposure on $100 bankroll)
 APPLY_CALIBRATION_SHIFT = False  # Set True to apply systematic overconfidence adjustment
 CALIBRATION_SHIFT = -0.044  # From 54 trades: predicted 62%, actual 57.4%
 
@@ -76,9 +76,23 @@ IDEMPOTENCY_WINDOW_HOURS = 24  # How long to remember trade intents
 
 # SAFETY LIMITS (Live Trading) - DISABLED FOR MICRO-MARKET TESTING
 MAX_TRADES_PER_HOUR = 1000  # Effectively unlimited
-MAX_POSITION_SIZE = 2.0  # Maximum $ per trade
 MAX_DAILY_LOSS = 1000.0  # Effectively unlimited
 EMERGENCY_STOP_LOSS = 1000.0  # Effectively unlimited
+
+# DYNAMIC POSITION SIZING - Auto-scales based on performance milestones
+ENABLE_AUTO_SCALING = True  # Automatically increase position size based on performance
+BASE_POSITION_SIZE = 2.0    # Starting position size
+MAX_AUTO_POSITION_SIZE = 10.0  # Maximum auto-scaling limit (1/4 Kelly ~$9)
+SCALING_START_TRADES = 25   # Minimum trades with XAI before first scaling
+SCALING_WIN_RATE_THRESHOLD = 0.58  # Minimum win rate to trigger scaling (58%)
+
+# Position size tiers based on milestones:
+# 0-24 trades: $2.00 (baseline, validating XAI)
+# 25-74 trades @ 58%+ WR: $5.00 (cautious increase)
+# 75-149 trades @ 60%+ WR: $8.00 (approaching 1/4 Kelly)
+# 150+ trades @ 60%+ WR: $10.00 (full 1/4 Kelly)
+
+MAX_POSITION_SIZE = 2.0  # Maximum $ per trade (will auto-increase based on milestones)
 
 
 class LearningAutonomousTrader:
@@ -112,8 +126,8 @@ class LearningAutonomousTrader:
         # Discord alerts
         self.discord = DiscordAlerter()
 
-        # Health check: Test OpenAI API before trading
-        print("Testing OpenAI API access...")
+        # Health check: Test XAI API before trading
+        print(f"Testing {self.multi_agent.provider} API access...")
         is_healthy, error_msg = self.multi_agent.health_check()
 
         if not is_healthy:
@@ -136,9 +150,9 @@ class LearningAutonomousTrader:
                 pass  # Discord alert optional
 
             # FAIL-CLOSED: Exit immediately
-            raise RuntimeError(f"OpenAI API health check failed: {error_msg}")
+            raise RuntimeError(f"API health check failed: {error_msg}")
 
-        print("✅ OpenAI API healthy")
+        print(f"✅ {self.multi_agent.provider} API healthy")
         print()
 
         # INCIDENT check: Refuse to start if unreconciled incidents exist
@@ -245,6 +259,9 @@ class LearningAutonomousTrader:
         # Duplicate trade prevention
         self.traded_market_ids = set()  # Track markets we've already traded
 
+        # Data quality tracking (E1/E2 discrimination)
+        self._invalid_market_keys = set()  # Dedupe for unique market_id failures
+
         # Dedupe guardrails (H3b protection)
         self.trade_attempts = {}  # market_id -> {'timestamp': ..., 'attempts': N}
         self.dedupe_window_seconds = 300  # 5 minutes
@@ -296,6 +313,32 @@ class LearningAutonomousTrader:
         print()
         print("=" * 80)
         print()
+
+    def _get_dynamic_position_size(self) -> float:
+        """Auto-scale position size based on performance"""
+        if not ENABLE_AUTO_SCALING:
+            return BASE_POSITION_SIZE
+        summary = self.learner.get_learning_summary()
+        edge_stats = summary.get('edge_detection', {})
+        sports = edge_stats.get('sports', {})
+        if not sports:
+            return BASE_POSITION_SIZE
+        n = sports.get('total_trades', 0)
+        wr = sports.get('win_rate', 0.0)
+        if n < SCALING_START_TRADES:
+            size = BASE_POSITION_SIZE
+        elif n < 75 and wr >= SCALING_WIN_RATE_THRESHOLD:
+            size = 5.0
+        elif n < 150 and wr >= 0.60:
+            size = 8.0
+        elif n >= 150 and wr >= 0.60:
+            size = MAX_AUTO_POSITION_SIZE
+        else:
+            size = BASE_POSITION_SIZE
+        if size != getattr(self, 'last_position_size', BASE_POSITION_SIZE):
+            print(f"\n📈 AUTO-SCALE: ${getattr(self, 'last_position_size', BASE_POSITION_SIZE):.2f}→${size:.2f} ({n} trades, {wr:.1%} WR)\n")
+            self.last_position_size = size
+        return min(size, MAX_AUTO_POSITION_SIZE)
 
     def get_current_exposure(self) -> tuple:
         """
@@ -604,7 +647,31 @@ class LearningAutonomousTrader:
         Returns:
             (should_trade, reason, trade_plan)
         """
-        market_id = market.get('condition_id') or market.get('market_id', 'unknown')
+        # DISCRIMINATING PATCH (E2 root cause fix):
+        # Prefer stable identifiers; NEVER allow sentinel "unknown" to flow into API calls
+        condition_id = market.get("condition_id")
+        gamma_id     = market.get("id")          # Gamma often uses "id"
+        market_id_f  = market.get("market_id")   # Existing fallback
+
+        market_id = condition_id or gamma_id or market_id_f
+
+        if not market_id:
+            # Discrimination logging: what keys do we even have?
+            keys = list(market.keys()) if isinstance(market, dict) else []
+            q = (market.get("question") or market.get("title") or "")[:120] if isinstance(market, dict) else ""
+
+            # Dedupe: only log unique key combinations
+            key_signature = frozenset(keys)
+            if key_signature not in self._invalid_market_keys:
+                self._invalid_market_keys.add(key_signature)
+                print("🚨 DATA_INVALID: Missing ALL market identifiers. Skipping.")
+                print(f"   present_keys={keys[:40]}")
+                print(f"   condition_id={condition_id} id={gamma_id} market_id={market_id_f}")
+                print(f"   question/title={q}")
+
+            self.markets_skipped += 1
+            return False, "Missing market identifiers", None
+
         question = market['question']
 
         print(f"\n{'='*80}")
@@ -711,11 +778,14 @@ class LearningAutonomousTrader:
         outcome = decision.outcome_to_buy
         market_price = features['prices'].get(outcome, 0.5)
 
+        # Get dynamic position size (auto-scales based on performance)
+        max_position = self._get_dynamic_position_size()
+
         position_size, sizing_explanation = self.learner.calculate_position_size(
             probability=calibrated_confidence,
             market_price=market_price,
             bankroll=BANKROLL,
-            max_position=2.0,
+            max_position=max_position,
             kelly_fraction=0.25
         )
 
@@ -799,8 +869,11 @@ class LearningAutonomousTrader:
         # Extract basic info
         market_price = float(market.get('price', '0.5'))
 
-        # Simple fast prediction using gpt-3.5-turbo
-        client = OpenAI()
+        # Simple fast prediction using XAI (Grok-4.1-Fast-Reasoning)
+        client = OpenAI(
+            api_key=os.getenv("XAI_API_KEY"),
+            base_url="https://api.x.ai/v1"
+        )
         prompt = f"""Predict: {question}
 
 Quick analysis - respond in 10 words or less:
@@ -811,7 +884,7 @@ Keep it simple and fast."""
 
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="grok-4-1-fast-reasoning",  # XAI's fast reasoning model
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=50
@@ -844,8 +917,8 @@ Keep it simple and fast."""
             self.markets_skipped += 1
             return False, "Confidence too low", None
 
-        # Simple position sizing
-        position_size = 2.0  # Fixed $2 for micro-markets
+        # Dynamic position sizing (auto-scales based on performance)
+        position_size = self._get_dynamic_position_size()
 
         print(f"⚡ Fast Decision: {outcome} at {calibrated_confidence:.1%} confidence")
         print(f"💰 Position: ${position_size:.2f}")
@@ -1180,7 +1253,9 @@ Keep it simple and fast."""
                 # Get token IDs (defensive check for list length)
                 token_ids = market_data.get('clobTokenIds') or []
                 if len(token_ids) < 2:
-                    print(f"  ⚠️  Invalid clobTokenIds (expected 2, got {len(token_ids)}), skipping")
+                    print(f"  ⚠️  Invalid clobTokenIds (expected 2, got {len(token_ids)})")
+                    print(f"      market_id={market_id}")
+                    print(f"      market_data keys={list(market_data.keys())[:20] if isinstance(market_data, dict) else 'NOT_DICT'}")
                     continue
 
                 # Get token ID for our outcome (YES=0, NO=1)

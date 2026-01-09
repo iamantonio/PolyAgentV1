@@ -1,0 +1,221 @@
+/home/tony/Dev/agents/scripts/experiment_4_sqlite_stress.py:87: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  datetime.utcnow().isoformat(),
+================================================================================
+EXPERIMENT 4: SQLite Concurrency Stress Test
+Testing H3a (SQLite is fine) vs H3b (contention is binding)
+================================================================================
+
+
+
+
+################################################################################
+# E4: SQLite Stress Test - Config: DEFAULT
+# Test DB: /tmp/sqlite_stress.db
+################################################################################
+✓ Default: journal_mode=delete, sync=2, timeout=5000ms
+
+================================================================================
+PHASE: Phase 1: Single Writer (sanity)
+Writers: 1 (thread)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 100
+  Successes: 100
+  Failures: 0 (0.00%)
+
+⏱️  LATENCY:
+  p50: 10.45ms
+  p95: 17.10ms
+  p99: 21.94ms
+
+================================================================================
+PHASE: Phase 2: 5 Threads
+Writers: 5 (thread)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 500
+  Successes: 500
+  Failures: 0 (0.00%)
+
+⏱️  LATENCY:
+  p50: 13.50ms
+  p95: 28.89ms
+  p99: 539.66ms
+
+================================================================================
+PHASE: Phase 3: 10 Threads
+Writers: 10 (thread)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 1000
+  Successes: 999
+  Failures: 1 (0.10%)
+
+⏱️  LATENCY:
+  p50: 13.51ms
+  p95: 434.71ms
+  p99: 2039.17ms
+
+❌ ERRORS (1 total, 1 unique):
+  - database is locked
+
+================================================================================
+PHASE: Phase 4: 2 Processes
+Writers: 2 (process)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 200
+  Successes: 200
+  Failures: 0 (0.00%)
+
+⏱️  LATENCY:
+  p50: 13.76ms
+  p95: 29.08ms
+  p99: 35.60ms
+
+================================================================================
+PHASE: Phase 5: 4 Processes
+Writers: 4 (process)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 400
+  Successes: 400
+  Failures: 0 (0.00%)
+
+⏱️  LATENCY:
+  p50: 13.75ms
+  p95: 29.31ms
+  p99: 36.09ms
+
+
+
+
+################################################################################
+# E4: SQLite Stress Test - Config: OPTIMIZED
+# Test DB: /tmp/sqlite_stress.db
+################################################################################
+✓ Configured: WAL mode, NORMAL sync, 5s busy timeout
+
+================================================================================
+PHASE: Phase 1: Single Writer (sanity)
+Writers: 1 (thread)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 100
+  Successes: 100
+  Failures: 0 (0.00%)
+
+⏱️  LATENCY:
+  p50: 15.95ms
+  p95: 20.30ms
+  p99: 22.88ms
+
+================================================================================
+PHASE: Phase 2: 5 Threads
+Writers: 5 (thread)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 500
+  Successes: 500
+  Failures: 0 (0.00%)
+
+⏱️  LATENCY:
+  p50: 14.79ms
+  p95: 141.58ms
+  p99: 741.99ms
+
+================================================================================
+PHASE: Phase 3: 10 Threads
+Writers: 10 (thread)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 1000
+  Successes: 1000
+  Failures: 0 (0.00%)
+
+⏱️  LATENCY:
+  p50: 16.20ms
+  p95: 237.55ms
+  p99: 1742.05ms
+
+================================================================================
+PHASE: Phase 4: 2 Processes
+Writers: 2 (process)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 200
+  Successes: 200
+  Failures: 0 (0.00%)
+
+⏱️  LATENCY:
+  p50: 31.25ms
+  p95: 32.33ms
+  p99: 35.00ms
+
+================================================================================
+PHASE: Phase 5: 4 Processes
+Writers: 4 (process)
+================================================================================
+
+📊 RESULTS:
+  Total attempts: 400
+  Successes: 400
+  Failures: 0 (0.00%)
+
+⏱️  LATENCY:
+  p50: 13.29ms
+  p95: 84.44ms
+  p99: 740.41ms
+
+================================================================================
+E4 FINAL ANALYSIS
+================================================================================
+
+📋 SUMMARY TABLE:
+
+Phase                          Config     Fail %     p95 (ms)     p99 (ms)    
+--------------------------------------------------------------------------------
+Phase 1: Single Writer (sanity) DEFAULT      0.00%       17.10        21.94
+                               OPTIMIZED    0.00%       20.30        22.88
+
+Phase 2: 5 Threads             DEFAULT      0.00%       28.89       539.66
+                               OPTIMIZED    0.00%      141.58       741.99
+
+Phase 3: 10 Threads            DEFAULT      0.10%      434.71      2039.17
+                               OPTIMIZED    0.00%      237.55      1742.05
+
+Phase 4: 2 Processes           DEFAULT      0.00%       29.08        35.60
+                               OPTIMIZED    0.00%       32.33        35.00
+
+Phase 5: 4 Processes           DEFAULT      0.00%       29.31        36.09
+                               OPTIMIZED    0.00%       84.44       740.41
+
+
+================================================================================
+DECISION CRITERIA
+================================================================================
+
+Optimized Config Performance:
+  Max failure rate: 0.00%
+  Max p95 latency: 237.55ms
+
+Thresholds:
+  Failure rate: ≥1% = GO for Postgres
+  P95 latency: >250ms = degraded decisions
+
+🎯 DECISION: NO-GO
+   Reason: Optimized config handles concurrency well (<1% failures, <250ms p95)
+
+================================================================================
+E4 COMPLETE
+================================================================================
+
