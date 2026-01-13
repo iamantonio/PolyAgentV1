@@ -70,9 +70,10 @@ class IntegratedLearningBot:
 
             if not edge_stats['has_edge']:
                 analysis["edge_check"] = "FAIL"
+                avg_pnl = edge_stats['avg_pnl_per_trade'] or 0
                 return (
                     False,
-                    f"No historical edge in {market_type} (avg P&L: ${edge_stats['avg_pnl_per_trade']:.2f})",
+                    f"No historical edge in {market_type} (avg P&L: ${avg_pnl:.2f})",
                     analysis
                 )
 

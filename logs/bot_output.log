@@ -1,0 +1,913 @@
+================================================================================
+LEARNING AUTONOMOUS TRADER
+================================================================================
+
+  ✅ LunarCrush connector initialized
+  ✅ CryptoEdgeDetector initialized (funding + OBI + sentiment)
+  ✅ PositionSync initialized (Polymarket Data API)
+
+🔄 Syncing positions with Polymarket...
+📊 Actual positions from Polymarket API: 102
+   ✓ Karlsruher SC vs. Hertha BSC: Both Teams to Score... | Yes | $1.78
+   ✓ Hannover 96 vs. TSV Fortuna 95 Düsseldorf: O/U 4.5... | Under | $1.74
+   ✓ Karlsruher SC vs. Hertha BSC: O/U 4.5... | Under | $1.74
+   ✓ 1. FC Magdeburg vs. SG Dynamo Dresden: O/U 3.5... | Under | $1.74
+   ✓ Series: Most nashors?... | Weibo Gaming | $1.77
+   ✓ Spread: Lakers (-8.5)... | Lakers | $0.80
+   ✓ Spread: Celtics (-8.5)... | Celtics | $0.00
+   ✓ AHL: Rochester Americans vs. Belleville Senators... | Rochester Americans | $1.03
+   ✓ KHL: Lokomotiv Yaroslavl vs. Shanghai Dragons... | Lokomotiv Yaroslavl | $1.00
+   ✓ Series: Dplus KIA Kill Handicap (-20.5)... | Dplus KIA | $1.04
+   ✓ 1. FC Magdeburg vs. SG Dynamo Dresden: O/U 4.5... | Under | $1.01
+   ✓ AHL: Hershey Bears vs. Charlotte Checkers... | Hershey Bears | $1.00
+   ✓ Hannover 96 vs. TSV Fortuna 95 Düsseldorf: Both Teams t... | Yes | $1.03
+   ✓ KHL: HC Dynamo Moscow vs. Dinamo Minsk... | HC Dynamo Moscow | $1.00
+   ✓ Series: Invictus Gaming Inhibitor Handicap (-0.5)... | Weibo Gaming | $0.99
+   ✓ LoL: 3BL Esports vs Baam Esports - Game 2 Winner... | 3BL Esports | $1.01
+   ✓ Spread: Rangers (-1.5)... | Rangers | $0.00
+   ✓ Will CF Cruz Azul win on 2026-02-07?... | No | $1.04
+   ✓ Belmont Bruins vs. Southern Illinois Salukis... | Belmont Bruins | $1.01
+   ✓ Sangal ALTERS to win 1 maps?... | No | $0.99
+   ✓ Bethesda Lion Angels vs. San Diego Toreros... | San Diego Toreros | $1.01
+   ✓ Morgan State Bears vs. Delaware State Hornets... | Morgan State Bears | $1.01
+   ✓ Will Johnson & Johnson (JNJ) beat quarterly earnings?... | No | $0.39
+   ✓ Rainbow Six Siege: Soul's Heart Esport vs CAG Osaka - G... | CAG Osaka | $1.01
+   ✓ Portsmouth FC vs. Southampton FC: Both Teams to Score... | Yes | $0.92
+   ✓ Will CF Pachuca vs. FC Juárez end in a draw?... | No | $1.04
+   ✓ Richmond Spiders vs. Saint Louis Billikens... | Richmond Spiders | $1.01
+   ✓ SpVgg Greuther Fürth vs. Eintracht Braunschweig: O/U 1.... | Over | $1.02
+   ✓ Duquesne Dukes vs. Fordham Rams... | Duquesne Dukes | $0.91
+   ✓ Series: Most drakes?... | Weibo Gaming | $1.02
+   ✓ Series: JD Gaming Kill Handicap (-7.5)... | JD Gaming | $1.03
+   ✓ Will the price of Bitcoin be above $88,000 on January 1... | Yes | $1.65
+   ✓ Truck Drivers to win 1 maps?... | No | $0.99
+   ✓ Series: Weibo Gaming Kill Handicap (-4.5)... | Weibo Gaming | $1.03
+   ✓ Games Total: O/U 2.5... | Under | $1.00
+   ✓ VfL Wolfsburg vs. FC St. Pauli 1910: O/U 2.5... | Over | $1.01
+   ✓ Will Deportivo Toluca FC win on 2026-02-07?... | No | $1.05
+   ✓ Karlsruher SC vs. Hertha BSC: O/U 1.5... | Over | $1.02
+   ✓ Games Total: O/U 2.5... | Under | $1.01
+   ✓ Will "28 Years Later: Bone Temple" Opening Weekend Box ... | Yes | $0.86
+   ✓ Series: Most towers?... | Weibo Gaming | $1.03
+   ✓ Bradley Braves vs. Illinois State Redbirds... | Bradley Braves | $0.81
+   ✓ Will the price of Bitcoin be above $92,000 on January 1... | Yes | $0.91
+   ✓ Game Handicap: NGE (-1.5)... | NextGeneration Esports | $1.02
+   ✓ Spread: Oilers (-1.5)... | Oilers | $1.66
+   ✓ Sangal ALTERS to win 2 maps?... | Yes | $1.03
+   ✓ LoL: 3BL Esports vs Baam Esports - Game 1 Winner... | 3BL Esports | $1.01
+   ✓ LoL: Dragons Esports vs Anubis Gaming (BO3)... | Dragons Esports | $0.93
+   ✓ Game Handicap: ANB (-1.5)... | Dragons Esports | $1.00
+   ✓ SpVgg Greuther Fürth vs. Eintracht Braunschweig: Both T... | Yes | $1.01
+   ✓ Will Atlas FC win on 2026-02-07?... | No | $1.05
+   ✓ Stars vs. Kings: O/U 5.5... | Over | $1.32
+   ✓ Will the price of Bitcoin be above $90,000 on January 1... | Yes | $1.33
+   ✓ Will the price of Bitcoin be above $98,000 on January 1... | Yes | $0.11
+   ✓ Wyoming Cowboys vs. Fresno State Bulldogs... | Fresno State Bulldogs | $1.00
+   ✓ Games Total: O/U 2.5... | Under | $1.00
+   ✓ Will Al Ettifaq Saudi Club vs. Al Taawoun Saudi Club en... | No | $1.08
+   ✓ CAG Osaka to win 2 games?... | No | $1.01
+   ✓ LoL: NextGeneration Esports vs One More Esports - Game ... | One More Esports | $1.00
+   ✓ Game Handicap: CAG (-1.5)... | CAG Osaka | $1.01
+   ✓ Games Total: O/U 2.5... | Under | $1.00
+   ✓ Will MrBeast's Celebrity Challenge video get 85 million... | Yes | $0.05
+   ✓ Will MrBeast's Celebrity Challenge video get between 82... | No | $1.93
+   ✓ Will the price of Bitcoin be above $94,000 on January 1... | Yes | $0.52
+   ✓ LoL: Dragons Esports vs Anubis Gaming - Game 1 Winner... | Dragons Esports | $1.01
+   ✓ Will CF Monterrey win on 2026-02-07?... | No | $1.04
+   ✓ LoL: 3BL Esports vs Baam Esports (BO3)... | 3BL Esports | $0.37
+   ✓ SHL: Faerjestad vs. Brynaes... | Faerjestad | $1.01
+   ✓ Will Ally Financial (ALLY) beat quarterly earnings?... | Yes | $1.66
+   ✓ Series: Most kills?... | Weibo Gaming | $1.03
+   ✓ Will the price of Bitcoin be above $96,000 on January 1... | Yes | $0.24
+   ✓ Norfolk State Spartans vs. South Carolina State Bulldog... | Norfolk State Spartans | $1.01
+   ✓ Will the price of Bitcoin be above $84,000 on January 1... | Yes | $1.96
+   ✓ SHL: Vaexjoe vs. HV 71... | Vaexjoe | $0.75
+   ✓ SNHL: ZSC Lions vs. Bern... | ZSC Lions | $0.76
+   ✓ AHL: Rochester Americans vs. Utica Comets... | Rochester Americans | $0.75
+   ✓ Hannover 96 vs. TSV Fortuna 95 Düsseldorf: O/U 3.5... | Under | $0.74
+   ✓ Spread: Indiana (-8.5)... | Indiana | $0.73
+   ✓ Spread: Panthers (-1.5)... | Panthers | $0.00
+   ✓ St. Bonaventure Bonnies vs. La Salle Explorers... | St. Bonaventure Bonnies | $0.88
+   ✓ Maple Leafs vs. Avalanche: O/U 6.5... | Over | $0.75
+   ✓ Rainbow Six Siege: Soul's Heart Esport vs CAG Osaka (BO... | CAG Osaka | $0.74
+   ✓ Spread: Hurricanes (-1.5)... | Hurricanes | $0.00
+   ✓ Panthers vs. Sabres: O/U 6.5... | Under | $0.00
+   ✓ Oilers vs. Blackhawks: O/U 6.5... | Over | $0.07
+   ✓ Soul's Heart Esport to win 1 games?... | No | $0.74
+   ✓ Series: Invictus Gaming Drake Handicap (-0.5)... | Weibo Gaming | $0.73
+   ✓ Truck Drivers to win 2 maps?... | No | $0.73
+   ✓ Counter-Strike: Truck Drivers vs Sangal ALTERS - Map 2 ... | Truck Drivers | $0.75
+   ✓ AHL: Rockford IceHogs vs. Grand Rapids Griffins... | Rockford IceHogs | $0.74
+   ✓ Will the price of Bitcoin be above $100,000 on January ... | Yes | $0.04
+   ✓ Counter-Strike: Truck Drivers vs Sangal ALTERS (BO3)... | Sangal ALTERS | $0.86
+   ✓ Hannover 96 vs. TSV Fortuna 95 Düsseldorf: O/U 2.5... | Over | $0.74
+   ✓ Portsmouth FC vs. Southampton FC: O/U 3.5... | Under | $0.73
+   ✓ Series: JD Gaming Kill Handicap (-6.5)... | JD Gaming | $0.75
+   ✓ KHL: Avtomobilist Yekaterinburg vs. Salavat Yulaev Ufa... | Avtomobilist Yekaterinburg | $0.74
+   ✓ Spread: Lightning (-1.5)... | Lightning | $1.48
+   ✓ Karlsruher SC vs. Hertha BSC: O/U 2.5... | Over | $0.75
+   ✓ Howard Bison vs. North Carolina Central Eagles... | Howard Bison | $0.74
+   ✓ Spread: Clippers (-4.5)... | Clippers | $0.75
+   ✓ Karlsruher SC vs. Hertha BSC: O/U 3.5... | Under | $0.73
+   ✓ Series: Most inhibitors?... | Weibo Gaming | $0.75
+
+📂 DB positions marked open: 102
+
+✅ RECONCILIATION COMPLETE
+   Closed stale: 0
+   Kept matching: 102
+   Final open in DB: 102
+  ✅ OutcomeSync initialized (REDEEM event tracking)
+
+📊 Syncing resolved outcomes from Polymarket...
+Found 157 REDEEM events from Polymarket
+Found 150 trades without recorded outcomes
+
+Sync complete: 0W/0L, Total P&L: $0.00
+Testing XAI (Grok-4.1-Fast-Reasoning) API access...
+✅ XAI (Grok-4.1-Fast-Reasoning) API healthy
+
+Mode: 🧪 DRY RUN
+Database: /home/tony/.polymarket/learning_trader.db
+Min Confidence: 20%
+
+LEARNING STATUS
+--------------------------------------------------------------------------------
+Edge Detection (by market type):
+  ❌ crypto: 0.0% win rate, $+0.00 avg P&L (98 trades)
+  ❌ esports: 0.0% win rate, $+0.00 avg P&L (1 trades)
+  ❌ other: 0.0% win rate, $+0.00 avg P&L (20 trades)
+  ❌ sports: 0.0% win rate, $+0.00 avg P&L (22 trades)
+
+Feature Learning: Not trained yet (need 20+ samples)
+
+Calibration: Not trained yet (need 30+ samples)
+
+================================================================================
+
+
+================================================================================
+MARKET SCAN - 2026-01-12 21:41:09
+================================================================================
+
+✅ Safety check: Dry run mode (no limits)
+
+
+================================================================================
+POSITION MANAGEMENT
+================================================================================
+Found 102 open position(s)
+
+Position: LoL: NextGeneration Esports vs One More Esports - Game 2 Win...
+  Entry: $0.9600 | Size: $1.94 | Outcome: One More Esports
+https://gamma-api.polymarket.com/markets/79006401325622382155
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=79006401325622382155
+      market_data keys=['type', 'error']
+Position: Games Total: O/U 2.5...
+  Entry: $0.9600 | Size: $1.94 | Outcome: Under
+https://gamma-api.polymarket.com/markets/51119462364260263144
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=51119462364260263144
+      market_data keys=['type', 'error']
+Position: LoL: Dragons Esports vs Anubis Gaming (BO3)...
+  Entry: $0.6900 | Size: $1.39 | Outcome: Dragons Esports
+https://gamma-api.polymarket.com/markets/64200810279595074292
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=64200810279595074292
+      market_data keys=['type', 'error']
+Position: LoL: Dragons Esports vs Anubis Gaming - Game 1 Winner...
+  Entry: $0.9600 | Size: $1.94 | Outcome: Dragons Esports
+https://gamma-api.polymarket.com/markets/89922331781107906405
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=89922331781107906405
+      market_data keys=['type', 'error']
+Position: Game Handicap: NGE (-1.5)...
+  Entry: $0.9600 | Size: $1.94 | Outcome: NextGeneration Esports
+https://gamma-api.polymarket.com/markets/56969851291425775025
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=56969851291425775025
+      market_data keys=['type', 'error']
+Position: Game Handicap: ANB (-1.5)...
+  Entry: $0.9600 | Size: $1.94 | Outcome: Dragons Esports
+https://gamma-api.polymarket.com/markets/66222273131203166335
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=66222273131203166335
+      market_data keys=['type', 'error']
+Position: LoL: 3BL Esports vs Baam Esports (BO3)...
+  Entry: $0.9600 | Size: $1.94 | Outcome: 3BL Esports
+https://gamma-api.polymarket.com/markets/93969791106686880165
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=93969791106686880165
+      market_data keys=['type', 'error']
+Position: Games Total: O/U 2.5...
+  Entry: $0.9600 | Size: $1.94 | Outcome: Under
+https://gamma-api.polymarket.com/markets/81203665135191227308
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=81203665135191227308
+      market_data keys=['type', 'error']
+Position: LoL: 3BL Esports vs Baam Esports - Game 1 Winner...
+  Entry: $0.9600 | Size: $1.94 | Outcome: 3BL Esports
+https://gamma-api.polymarket.com/markets/62588328461573003287
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=62588328461573003287
+      market_data keys=['type', 'error']
+Position: LoL: 3BL Esports vs Baam Esports - Game 2 Winner...
+  Entry: $0.9600 | Size: $1.94 | Outcome: 3BL Esports
+https://gamma-api.polymarket.com/markets/10392403653853840933
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10392403653853840933
+      market_data keys=['type', 'error']
+Position: Games Total: O/U 2.5...
+  Entry: $0.9600 | Size: $1.94 | Outcome: Under
+https://gamma-api.polymarket.com/markets/75173420958704946141
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=75173420958704946141
+      market_data keys=['type', 'error']
+Position: Will MrBeast's Celebrity Challenge video get 85 million or m...
+  Entry: $0.8900 | Size: $1.80 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/82032924057302260409
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=82032924057302260409
+      market_data keys=['type', 'error']
+Position: Will MrBeast's Celebrity Challenge video get between 82 and ...
+  Entry: $0.8800 | Size: $1.78 | Outcome: No
+https://gamma-api.polymarket.com/markets/83307384094326259050
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=83307384094326259050
+      market_data keys=['type', 'error']
+Position: Will "28 Years Later: Bone Temple" Opening Weekend Box Offic...
+  Entry: $0.8500 | Size: $1.72 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/51373331116793758325
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=51373331116793758325
+      market_data keys=['type', 'error']
+Position: Spread: Lakers (-8.5)...
+  Entry: $0.9500 | Size: $1.98 | Outcome: Lakers
+https://gamma-api.polymarket.com/markets/39335264012826996687
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=39335264012826996687
+      market_data keys=['type', 'error']
+Position: Spread: Celtics (-8.5)...
+  Entry: $0.9500 | Size: $1.98 | Outcome: Celtics
+https://gamma-api.polymarket.com/markets/45583183128924207921
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=45583183128924207921
+      market_data keys=['type', 'error']
+Position: Spread: Clippers (-4.5)...
+  Entry: $0.9800 | Size: $1.45 | Outcome: Clippers
+https://gamma-api.polymarket.com/markets/78536692015050920824
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=78536692015050920824
+      market_data keys=['type', 'error']
+Position: Will Deportivo Toluca FC win on 2026-02-07?...
+  Entry: $0.9700 | Size: $1.96 | Outcome: No
+https://gamma-api.polymarket.com/markets/47851742539403005740
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=47851742539403005740
+      market_data keys=['type', 'error']
+Position: Will Atlas FC win on 2026-02-07?...
+  Entry: $0.9700 | Size: $1.96 | Outcome: No
+https://gamma-api.polymarket.com/markets/70390530824243232961
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=70390530824243232961
+      market_data keys=['type', 'error']
+Position: Will CF Cruz Azul win on 2026-02-07?...
+  Entry: $0.9700 | Size: $1.96 | Outcome: No
+https://gamma-api.polymarket.com/markets/10991960884437048078
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10991960884437048078
+      market_data keys=['type', 'error']
+Position: Will CF Pachuca vs. FC Juárez end in a draw?...
+  Entry: $0.9700 | Size: $1.96 | Outcome: No
+https://gamma-api.polymarket.com/markets/17298769086049668416
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=17298769086049668416
+      market_data keys=['type', 'error']
+Position: Will CF Monterrey win on 2026-02-07?...
+  Entry: $0.9700 | Size: $1.96 | Outcome: No
+https://gamma-api.polymarket.com/markets/91706589460533473836
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=91706589460533473836
+      market_data keys=['type', 'error']
+Position: Will the price of Bitcoin be above $90,000 on January 18?...
+  Entry: $0.6400 | Size: $1.29 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/72669371093021947530
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=72669371093021947530
+      market_data keys=['type', 'error']
+Position: Will the price of Bitcoin be above $88,000 on January 18?...
+  Entry: $0.8000 | Size: $1.62 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/34841849108442902914
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=34841849108442902914
+      market_data keys=['type', 'error']
+Position: Will the price of Bitcoin be above $94,000 on January 18?...
+  Entry: $0.2800 | Size: $0.57 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/84095823063304069199
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=84095823063304069199
+      market_data keys=['type', 'error']
+Position: Will the price of Bitcoin be above $84,000 on January 18?...
+  Entry: $0.9500 | Size: $1.92 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/99733851800346076221
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=99733851800346076221
+      market_data keys=['type', 'error']
+Position: Will the price of Bitcoin be above $96,000 on January 18?...
+  Entry: $0.1600 | Size: $0.32 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/99566430705636113244
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=99566430705636113244
+      market_data keys=['type', 'error']
+Position: Will the price of Bitcoin be above $92,000 on January 18?...
+  Entry: $0.4600 | Size: $0.93 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/55826458566207965798
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=55826458566207965798
+      market_data keys=['type', 'error']
+Position: Will the price of Bitcoin be above $98,000 on January 18?...
+  Entry: $0.1000 | Size: $0.20 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/74028888311622239513
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=74028888311622239513
+      market_data keys=['type', 'error']
+Position: Will the price of Bitcoin be above $100,000 on January 18?...
+  Entry: $0.0600 | Size: $0.09 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/45424709315536684574
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=45424709315536684574
+      market_data keys=['type', 'error']
+Position: AHL: Hershey Bears vs. Charlotte Checkers...
+  Entry: $0.9700 | Size: $1.98 | Outcome: Hershey Bears
+https://gamma-api.polymarket.com/markets/53361539049711550928
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=53361539049711550928
+      market_data keys=['type', 'error']
+Position: KHL: Avtomobilist Yekaterinburg vs. Salavat Yulaev Ufa...
+  Entry: $0.9700 | Size: $1.44 | Outcome: Avtomobilist Yekaterinburg
+https://gamma-api.polymarket.com/markets/55197392760646210204
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=55197392760646210204
+      market_data keys=['type', 'error']
+Position: SNHL: ZSC Lions vs. Bern...
+  Entry: $0.9700 | Size: $1.46 | Outcome: ZSC Lions
+https://gamma-api.polymarket.com/markets/36246740389897818008
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=36246740389897818008
+      market_data keys=['type', 'error']
+Position: AHL: Rochester Americans vs. Utica Comets...
+  Entry: $0.9700 | Size: $1.46 | Outcome: Rochester Americans
+https://gamma-api.polymarket.com/markets/40045759218001723070
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=40045759218001723070
+      market_data keys=['type', 'error']
+Position: SHL: Faerjestad vs. Brynaes...
+  Entry: $0.9700 | Size: $1.96 | Outcome: Faerjestad
+https://gamma-api.polymarket.com/markets/96192381050357236219
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=96192381050357236219
+      market_data keys=['type', 'error']
+Position: AHL: Rockford IceHogs vs. Grand Rapids Griffins...
+  Entry: $0.9700 | Size: $1.44 | Outcome: Rockford IceHogs
+https://gamma-api.polymarket.com/markets/40500128861123873920
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=40500128861123873920
+      market_data keys=['type', 'error']
+Position: KHL: HC Dynamo Moscow vs. Dinamo Minsk...
+  Entry: $0.9700 | Size: $1.98 | Outcome: HC Dynamo Moscow
+https://gamma-api.polymarket.com/markets/77110385981702192804
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=77110385981702192804
+      market_data keys=['type', 'error']
+Position: KHL: Lokomotiv Yaroslavl vs. Shanghai Dragons...
+  Entry: $0.9700 | Size: $1.98 | Outcome: Lokomotiv Yaroslavl
+https://gamma-api.polymarket.com/markets/13160255751949658323
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=13160255751949658323
+      market_data keys=['type', 'error']
+Position: SHL: Vaexjoe vs. HV 71...
+  Entry: $0.9700 | Size: $1.46 | Outcome: Vaexjoe
+https://gamma-api.polymarket.com/markets/28694974236402879105
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=28694974236402879105
+      market_data keys=['type', 'error']
+Position: AHL: Rochester Americans vs. Belleville Senators...
+  Entry: $0.9700 | Size: $1.98 | Outcome: Rochester Americans
+https://gamma-api.polymarket.com/markets/10189003761494036540
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10189003761494036540
+      market_data keys=['type', 'error']
+Position: Series: Dplus KIA Kill Handicap (-20.5)...
+  Entry: $0.9700 | Size: $1.98 | Outcome: Dplus KIA
+https://gamma-api.polymarket.com/markets/24092647419300562461
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=24092647419300562461
+      market_data keys=['type', 'error']
+Position: Series: Most nashors?...
+  Entry: $0.9742 | Size: $3.41 | Outcome: Weibo Gaming
+https://gamma-api.polymarket.com/markets/69662139655352007179
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=69662139655352007179
+      market_data keys=['type', 'error']
+Position: Series: Weibo Gaming Kill Handicap (-4.5)...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Weibo Gaming
+https://gamma-api.polymarket.com/markets/42988555081621025869
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=42988555081621025869
+      market_data keys=['type', 'error']
+Position: Series: JD Gaming Kill Handicap (-6.5)...
+  Entry: $0.9800 | Size: $1.45 | Outcome: JD Gaming
+https://gamma-api.polymarket.com/markets/54630289302709462396
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=54630289302709462396
+      market_data keys=['type', 'error']
+Position: Series: JD Gaming Kill Handicap (-7.5)...
+  Entry: $0.9800 | Size: $1.98 | Outcome: JD Gaming
+https://gamma-api.polymarket.com/markets/28603391256964003816
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=28603391256964003816
+      market_data keys=['type', 'error']
+Position: Series: Most drakes?...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Weibo Gaming
+https://gamma-api.polymarket.com/markets/25885039852926475838
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=25885039852926475838
+      market_data keys=['type', 'error']
+Position: Series: Most kills?...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Weibo Gaming
+https://gamma-api.polymarket.com/markets/97519153572051872738
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=97519153572051872738
+      market_data keys=['type', 'error']
+Position: Series: Most inhibitors?...
+  Entry: $0.9900 | Size: $1.47 | Outcome: Weibo Gaming
+https://gamma-api.polymarket.com/markets/98677588647894252123
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=98677588647894252123
+      market_data keys=['type', 'error']
+Position: Series: Invictus Gaming Inhibitor Handicap (-0.5)...
+  Entry: $0.9800 | Size: $1.98 | Outcome: Weibo Gaming
+https://gamma-api.polymarket.com/markets/10122377357841706882
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10122377357841706882
+      market_data keys=['type', 'error']
+Position: Series: Invictus Gaming Drake Handicap (-0.5)...
+  Entry: $0.9800 | Size: $1.45 | Outcome: Weibo Gaming
+https://gamma-api.polymarket.com/markets/23839078591439032384
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=23839078591439032384
+      market_data keys=['type', 'error']
+Position: Series: Most towers?...
+  Entry: $0.9800 | Size: $1.98 | Outcome: Weibo Gaming
+https://gamma-api.polymarket.com/markets/51614209164424813559
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=51614209164424813559
+      market_data keys=['type', 'error']
+Position: Maple Leafs vs. Avalanche: O/U 6.5...
+  Entry: $0.5200 | Size: $0.77 | Outcome: Over
+https://gamma-api.polymarket.com/markets/10243369957915060559
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10243369957915060559
+      market_data keys=['type', 'error']
+Position: Spread: Oilers (-1.5)...
+  Entry: $0.4500 | Size: $0.91 | Outcome: Oilers
+https://gamma-api.polymarket.com/markets/58451744624980363278
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=58451744624980363278
+      market_data keys=['type', 'error']
+Position: Oilers vs. Blackhawks: O/U 6.5...
+  Entry: $0.5100 | Size: $0.75 | Outcome: Over
+https://gamma-api.polymarket.com/markets/13231534819462152765
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=13231534819462152765
+      market_data keys=['type', 'error']
+Position: Stars vs. Kings: O/U 5.5...
+  Entry: $0.5700 | Size: $1.15 | Outcome: Over
+https://gamma-api.polymarket.com/markets/70518180375926850027
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=70518180375926850027
+      market_data keys=['type', 'error']
+Position: Spread: Hurricanes (-1.5)...
+  Entry: $0.4000 | Size: $0.59 | Outcome: Hurricanes
+https://gamma-api.polymarket.com/markets/11284811052317677438
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=11284811052317677438
+      market_data keys=['type', 'error']
+Position: Panthers vs. Sabres: O/U 6.5...
+  Entry: $0.6000 | Size: $0.89 | Outcome: Under
+https://gamma-api.polymarket.com/markets/11506292040397349785
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=11506292040397349785
+      market_data keys=['type', 'error']
+Position: Spread: Panthers (-1.5)...
+  Entry: $0.3600 | Size: $0.53 | Outcome: Panthers
+https://gamma-api.polymarket.com/markets/10081380316839948159
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10081380316839948159
+      market_data keys=['type', 'error']
+Position: Spread: Rangers (-1.5)...
+  Entry: $0.4000 | Size: $0.81 | Outcome: Rangers
+https://gamma-api.polymarket.com/markets/10603692400472112322
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10603692400472112322
+      market_data keys=['type', 'error']
+Position: Spread: Lightning (-1.5)...
+  Entry: $0.4200 | Size: $0.62 | Outcome: Lightning
+https://gamma-api.polymarket.com/markets/58918766276840961437
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=58918766276840961437
+      market_data keys=['type', 'error']
+Position: Spread: Indiana (-8.5)...
+  Entry: $0.9500 | Size: $1.43 | Outcome: Indiana
+https://gamma-api.polymarket.com/markets/67241941908808177923
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=67241941908808177923
+      market_data keys=['type', 'error']
+Position: Bradley Braves vs. Illinois State Redbirds...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Bradley Braves
+https://gamma-api.polymarket.com/markets/52110173845190999426
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=52110173845190999426
+      market_data keys=['type', 'error']
+Position: Belmont Bruins vs. Southern Illinois Salukis...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Belmont Bruins
+https://gamma-api.polymarket.com/markets/11003997750679983212
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=11003997750679983212
+      market_data keys=['type', 'error']
+Position: Howard Bison vs. North Carolina Central Eagles...
+  Entry: $0.9900 | Size: $1.47 | Outcome: Howard Bison
+https://gamma-api.polymarket.com/markets/74980871792797872030
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=74980871792797872030
+      market_data keys=['type', 'error']
+Position: St. Bonaventure Bonnies vs. La Salle Explorers...
+  Entry: $0.9900 | Size: $1.47 | Outcome: St. Bonaventure Bonnies
+https://gamma-api.polymarket.com/markets/10099915563114873955
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10099915563114873955
+      market_data keys=['type', 'error']
+Position: Richmond Spiders vs. Saint Louis Billikens...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Richmond Spiders
+https://gamma-api.polymarket.com/markets/20480885513447031686
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=20480885513447031686
+      market_data keys=['type', 'error']
+Position: Norfolk State Spartans vs. South Carolina State Bulldogs...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Norfolk State Spartans
+https://gamma-api.polymarket.com/markets/99711150570609139866
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=99711150570609139866
+      market_data keys=['type', 'error']
+Position: Duquesne Dukes vs. Fordham Rams...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Duquesne Dukes
+https://gamma-api.polymarket.com/markets/23393965840272305183
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=23393965840272305183
+      market_data keys=['type', 'error']
+Position: Bethesda Lion Angels vs. San Diego Toreros...
+  Entry: $0.9700 | Size: $1.96 | Outcome: San Diego Toreros
+https://gamma-api.polymarket.com/markets/11113782028165986413
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=11113782028165986413
+      market_data keys=['type', 'error']
+Position: Morgan State Bears vs. Delaware State Hornets...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Morgan State Bears
+https://gamma-api.polymarket.com/markets/11169038099170433840
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=11169038099170433840
+      market_data keys=['type', 'error']
+Position: Wyoming Cowboys vs. Fresno State Bulldogs...
+  Entry: $0.9700 | Size: $1.96 | Outcome: Fresno State Bulldogs
+https://gamma-api.polymarket.com/markets/74941716532857124563
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=74941716532857124563
+      market_data keys=['type', 'error']
+Position: 1. FC Magdeburg vs. SG Dynamo Dresden: O/U 4.5...
+  Entry: $0.9600 | Size: $1.96 | Outcome: Under
+https://gamma-api.polymarket.com/markets/49385800008715520340
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=49385800008715520340
+      market_data keys=['type', 'error']
+Position: Hannover 96 vs. TSV Fortuna 95 Düsseldorf: Both Teams to Sco...
+  Entry: $0.9700 | Size: $1.98 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/58050971944147908877
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=58050971944147908877
+      market_data keys=['type', 'error']
+Position: Hannover 96 vs. TSV Fortuna 95 Düsseldorf: O/U 3.5...
+  Entry: $0.9600 | Size: $1.44 | Outcome: Under
+https://gamma-api.polymarket.com/markets/44710820848748379616
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=44710820848748379616
+      market_data keys=['type', 'error']
+Position: 1. FC Magdeburg vs. SG Dynamo Dresden: O/U 3.5...
+  Entry: $0.9684 | Size: $3.41 | Outcome: Under
+https://gamma-api.polymarket.com/markets/40427069828916198010
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=40427069828916198010
+      market_data keys=['type', 'error']
+Position: Hannover 96 vs. TSV Fortuna 95 Düsseldorf: O/U 4.5...
+  Entry: $0.9684 | Size: $3.41 | Outcome: Under
+https://gamma-api.polymarket.com/markets/10817477726742508066
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10817477726742508066
+      market_data keys=['type', 'error']
+Position: Karlsruher SC vs. Hertha BSC: O/U 4.5...
+  Entry: $0.9600 | Size: $3.38 | Outcome: Under
+https://gamma-api.polymarket.com/markets/22023081027750332688
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=22023081027750332688
+      market_data keys=['type', 'error']
+Position: Karlsruher SC vs. Hertha BSC: Both Teams to Score...
+  Entry: $0.9700 | Size: $3.41 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/10100159694609063277
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=10100159694609063277
+      market_data keys=['type', 'error']
+Position: Hannover 96 vs. TSV Fortuna 95 Düsseldorf: O/U 2.5...
+  Entry: $0.9700 | Size: $1.44 | Outcome: Over
+https://gamma-api.polymarket.com/markets/49400923013335760371
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=49400923013335760371
+      market_data keys=['type', 'error']
+Position: SpVgg Greuther Fürth vs. Eintracht Braunschweig: O/U 1.5...
+  Entry: $0.9700 | Size: $1.96 | Outcome: Over
+https://gamma-api.polymarket.com/markets/22853942136110004141
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=22853942136110004141
+      market_data keys=['type', 'error']
+Position: Karlsruher SC vs. Hertha BSC: O/U 1.5...
+  Entry: $0.9700 | Size: $1.96 | Outcome: Over
+https://gamma-api.polymarket.com/markets/49791248961296639396
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=49791248961296639396
+      market_data keys=['type', 'error']
+Position: Karlsruher SC vs. Hertha BSC: O/U 3.5...
+  Entry: $0.9600 | Size: $1.42 | Outcome: Under
+https://gamma-api.polymarket.com/markets/96448860534575506050
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=96448860534575506050
+      market_data keys=['type', 'error']
+Position: Karlsruher SC vs. Hertha BSC: O/U 2.5...
+  Entry: $0.9700 | Size: $1.44 | Outcome: Over
+https://gamma-api.polymarket.com/markets/74095165328195624137
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=74095165328195624137
+      market_data keys=['type', 'error']
+Position: SpVgg Greuther Fürth vs. Eintracht Braunschweig: Both Teams ...
+  Entry: $0.9700 | Size: $1.96 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/66497085885070670125
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=66497085885070670125
+      market_data keys=['type', 'error']
+Position: Sangal ALTERS to win 1 maps?...
+  Entry: $0.9500 | Size: $1.92 | Outcome: No
+https://gamma-api.polymarket.com/markets/11082175393528995240
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=11082175393528995240
+      market_data keys=['type', 'error']
+Position: Counter-Strike: Truck Drivers vs Sangal ALTERS (BO3)...
+  Entry: $0.9500 | Size: $1.41 | Outcome: Sangal ALTERS
+https://gamma-api.polymarket.com/markets/47699412289027358147
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=47699412289027358147
+      market_data keys=['type', 'error']
+Position: Counter-Strike: Truck Drivers vs Sangal ALTERS - Map 2 Winne...
+  Entry: $0.9800 | Size: $1.45 | Outcome: Truck Drivers
+https://gamma-api.polymarket.com/markets/32035636596044139618
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=32035636596044139618
+      market_data keys=['type', 'error']
+Position: CAG Osaka to win 2 games?...
+  Entry: $0.9600 | Size: $1.94 | Outcome: No
+https://gamma-api.polymarket.com/markets/78969847384136782663
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=78969847384136782663
+      market_data keys=['type', 'error']
+Position: Sangal ALTERS to win 2 maps?...
+  Entry: $0.9800 | Size: $1.98 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/59462471480459229157
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=59462471480459229157
+      market_data keys=['type', 'error']
+Position: Truck Drivers to win 2 maps?...
+  Entry: $0.9600 | Size: $1.42 | Outcome: No
+https://gamma-api.polymarket.com/markets/26639173895055642117
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=26639173895055642117
+      market_data keys=['type', 'error']
+Position: Games Total: O/U 2.5...
+  Entry: $0.9800 | Size: $1.98 | Outcome: Under
+https://gamma-api.polymarket.com/markets/45232608643428977159
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=45232608643428977159
+      market_data keys=['type', 'error']
+Position: Truck Drivers to win 1 maps?...
+  Entry: $0.9600 | Size: $1.94 | Outcome: No
+https://gamma-api.polymarket.com/markets/42052868208368271330
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=42052868208368271330
+      market_data keys=['type', 'error']
+Position: Rainbow Six Siege: Soul's Heart Esport vs CAG Osaka - Game 2...
+  Entry: $0.9600 | Size: $1.94 | Outcome: CAG Osaka
+https://gamma-api.polymarket.com/markets/15011592242232921920
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=15011592242232921920
+      market_data keys=['type', 'error']
+Position: Soul's Heart Esport to win 1 games?...
+  Entry: $0.9600 | Size: $1.42 | Outcome: No
+https://gamma-api.polymarket.com/markets/21249263262786281017
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=21249263262786281017
+      market_data keys=['type', 'error']
+Position: Game Handicap: CAG (-1.5)...
+  Entry: $0.9800 | Size: $1.98 | Outcome: CAG Osaka
+https://gamma-api.polymarket.com/markets/80670439533655851455
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=80670439533655851455
+      market_data keys=['type', 'error']
+Position: Rainbow Six Siege: Soul's Heart Esport vs CAG Osaka (BO3)...
+  Entry: $0.9600 | Size: $1.42 | Outcome: CAG Osaka
+https://gamma-api.polymarket.com/markets/11221562125616410002
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=11221562125616410002
+      market_data keys=['type', 'error']
+Position: Portsmouth FC vs. Southampton FC: O/U 3.5...
+  Entry: $0.9900 | Size: $1.47 | Outcome: Under
+https://gamma-api.polymarket.com/markets/50470517708003345874
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=50470517708003345874
+      market_data keys=['type', 'error']
+Position: Portsmouth FC vs. Southampton FC: Both Teams to Score...
+  Entry: $0.9900 | Size: $2.00 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/15997230821548453465
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=15997230821548453465
+      market_data keys=['type', 'error']
+Position: Will Johnson & Johnson (JNJ) beat quarterly earnings?...
+  Entry: $0.9600 | Size: $1.94 | Outcome: No
+https://gamma-api.polymarket.com/markets/11250458126434449306
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=11250458126434449306
+      market_data keys=['type', 'error']
+Position: Will Ally Financial (ALLY) beat quarterly earnings?...
+  Entry: $0.9700 | Size: $1.96 | Outcome: Yes
+https://gamma-api.polymarket.com/markets/97100944658573482736
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=97100944658573482736
+      market_data keys=['type', 'error']
+Position: Will Al Ettifaq Saudi Club vs. Al Taawoun Saudi Club end in ...
+  Entry: $0.9800 | Size: $1.98 | Outcome: No
+https://gamma-api.polymarket.com/markets/77762610746172260921
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=77762610746172260921
+      market_data keys=['type', 'error']
+Position: VfL Wolfsburg vs. FC St. Pauli 1910: O/U 2.5...
+  Entry: $0.5800 | Size: $1.17 | Outcome: Over
+https://gamma-api.polymarket.com/markets/45517159392833143564
+  ⚠️  Invalid clobTokenIds (expected 2, got 0)
+      market_id=45517159392833143564
+      market_data keys=['type', 'error']
+================================================================================
+Found 50 active markets from API
+
+
+================================================================================
+ANALYZING MARKET
+================================================================================
+Question: XRP Up or Down - January 13, 10:30PM-10:35PM ET
+
+⚡ FAST MODE: Micro-market detected
+  🔍 Checking crypto edge for ripple...
+
+  📊 Analyzing edge for RIPPLE...
+  🌙 Fetching LunarCrush data for ripple...
+    UP signals: 1, DOWN signals: 1
+    Combined: None @ 50.0%
+    Trade: ❌ NO
+    Skip reason: Insufficient signal agreement (need 2+)
+  ❌ SKIP: Micro-market coin-flip, no edge: Insufficient signal agreement (need 2+)
+
+================================================================================
+ANALYZING MARKET
+================================================================================
+Question: Solana Up or Down - January 13, 10:30PM-10:35PM ET
+
+⚡ FAST MODE: Micro-market detected
+  🔍 Checking crypto edge for solana...
+
+  📊 Analyzing edge for SOLANA...
+  ⏱️  Rate limit: waiting 3.1s...
+  🌙 Fetching LunarCrush data for solana...
+    UP signals: 1, DOWN signals: 0
+    Combined: None @ 50.0%
+    Trade: ❌ NO
+    Skip reason: Insufficient signal agreement (need 2+)
+  ❌ SKIP: Micro-market coin-flip, no edge: Insufficient signal agreement (need 2+)
+Traceback (most recent call last):
+  File "/home/tony/Dev/agents/scripts/python/learning_autonomous_trader.py", line 1731, in scan_and_trade
+    should_trade, reason, trade_plan = self.analyze_market(market)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tony/Dev/agents/scripts/python/learning_autonomous_trader.py", line 944, in analyze_market
+    should_trade, reason, analysis = self.learner.should_trade_market(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tony/Dev/agents/agents/learning/integrated_learner.py", line 75, in should_trade_market
+    f"No historical edge in {market_type} (avg P&L: ${edge_stats['avg_pnl_per_trade']:.2f})",
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: unsupported format string passed to NoneType.__format__
+
+================================================================================
+ANALYZING MARKET
+================================================================================
+Question: Bitcoin Up or Down - January 13, 10:30PM-10:35PM ET
+
+⚡ FAST MODE: Micro-market detected
+  🔍 Checking crypto edge for bitcoin...
+
+  📊 Analyzing edge for BITCOIN...
+  ⏱️  Rate limit: waiting 3.2s...
+  🌙 Fetching LunarCrush data for bitcoin...
+  ❌ SKIP: Micro-market coin-flip, no edge: Very low volatility - flat market
+
+================================================================================
+ANALYZING MARKET
+================================================================================
+Question: Ethereum Up or Down - January 13, 10:30PM-10:35PM ET
+
+⚡ FAST MODE: Micro-market detected
+  🔍 Checking crypto edge for ethereum...
+
+  📊 Analyzing edge for ETHEREUM...
+  ⏱️  Rate limit: waiting 3.4s...
+  🌙 Fetching LunarCrush data for ethereum...
+  ❌ SKIP: Micro-market coin-flip, no edge: Very low volatility - flat market
+
+================================================================================
+ANALYZING MARKET
+================================================================================
+Question: XRP Up or Down - January 13, 10:25PM-10:30PM ET
+
+⚡ FAST MODE: Micro-market detected
+  🔍 Checking crypto edge for ripple...
+
+  📊 Analyzing edge for RIPPLE...
+  💾 Using cached LunarCrush data for ripple (age: 18s)
+    UP signals: 1, DOWN signals: 1
+    Combined: None @ 50.0%
+    Trade: ❌ NO
+    Skip reason: Insufficient signal agreement (need 2+)
+  ❌ SKIP: Micro-market coin-flip, no edge: Insufficient signal agreement (need 2+)
+
+================================================================================
+ANALYZING MARKET
+================================================================================
+Question: Ethereum Up or Down - January 13, 10:25PM-10:30PM ET
+
+⚡ FAST MODE: Micro-market detected
+  🔍 Checking crypto edge for ethereum...
+
+  📊 Analyzing edge for ETHEREUM...
+  💾 Using cached LunarCrush data for ethereum (age: 1s)
+  ❌ SKIP: Micro-market coin-flip, no edge: Very low volatility - flat market
+
+================================================================================
+ANALYZING MARKET
+================================================================================
+Question: Solana Up or Down - January 13, 10:25PM-10:30PM ET
+
+⚡ FAST MODE: Micro-market detected
+  🔍 Checking crypto edge for solana...
+
+  📊 Analyzing edge for SOLANA...
+  💾 Using cached LunarCrush data for solana (age: 14s)
+    UP signals: 1, DOWN signals: 0
+    Combined: None @ 50.0%
+    Trade: ❌ NO
+    Skip reason: Insufficient signal agreement (need 2+)
+  ❌ SKIP: Micro-market coin-flip, no edge: Insufficient signal agreement (need 2+)
+
+================================================================================
+ANALYZING MARKET
+================================================================================
+Question: Bitcoin Up or Down - January 13, 10:25PM-10:30PM ET
+
+⚡ FAST MODE: Micro-market detected
+  🔍 Checking crypto edge for bitcoin...
+
+  📊 Analyzing edge for BITCOIN...
+  💾 Using cached LunarCrush data for bitcoin (age: 8s)
+  ❌ SKIP: Micro-market coin-flip, no edge: Very low volatility - flat market
+
+================================================================================
+ANALYZING MARKET
+================================================================================
+Question: Map Handicap: megoshort (-1.5)
+
+Market Type: sports
+Time to Close: 24.0 hours
+
+STEP 1: Edge Detection
+--------------------------------------------------------------------------------
+❌ Scan error: unsupported format string passed to NoneType.__format__

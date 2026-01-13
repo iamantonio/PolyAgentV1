@@ -19,7 +19,14 @@ from decimal import Decimal
 class TradeHistoryDB:
     """Persistent database of all trading activity and predictions"""
 
-    def __init__(self, db_path: str = "/tmp/trade_learning.db"):
+    def __init__(self, db_path: str = None):
+        # Use persistent storage by default (not /tmp which gets wiped)
+        if db_path is None:
+            import os
+            db_dir = os.path.expanduser("~/.polymarket")
+            os.makedirs(db_dir, exist_ok=True)
+            db_path = os.path.join(db_dir, "learning_trader.db")
+
         self.db_path = db_path
         self.conn = sqlite3.connect(db_path, timeout=5.0)
 
@@ -620,6 +627,47 @@ class TradeHistoryDB:
         self.conn.commit()
 
         return pnl
+
+    def was_recently_analyzed(self, market_id: str, hours: int = 24) -> bool:
+        """Check if a market was analyzed within the last N hours.
+
+        Used to skip redundant AI calls for markets we've already evaluated.
+        """
+        cursor = self.conn.cursor()
+        cutoff = (datetime.utcnow() - timedelta(hours=hours)).isoformat()
+
+        cursor.execute("""
+            SELECT COUNT(*) FROM predictions
+            WHERE market_id = ? AND timestamp > ?
+        """, (market_id, cutoff))
+
+        count = cursor.fetchone()[0]
+        return count > 0
+
+    def get_cached_prediction(self, market_id: str, hours: int = 24) -> Optional[Dict]:
+        """Get the most recent prediction for a market if within cache window."""
+        cursor = self.conn.cursor()
+        cutoff = (datetime.utcnow() - timedelta(hours=hours)).isoformat()
+
+        cursor.execute("""
+            SELECT predicted_outcome, predicted_probability, confidence, reasoning, strategy
+            FROM predictions
+            WHERE market_id = ? AND timestamp > ?
+            ORDER BY timestamp DESC
+            LIMIT 1
+        """, (market_id, cutoff))
+
+        row = cursor.fetchone()
+        if row:
+            return {
+                "outcome": row[0],
+                "probability": row[1],
+                "confidence": row[2],
+                "reasoning": row[3],
+                "strategy": row[4],
+                "cached": True
+            }
+        return None
 
     def close(self):
         """Close database connection"""

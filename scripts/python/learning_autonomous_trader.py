@@ -35,6 +35,30 @@ from agents.learning.integrated_learner import IntegratedLearningBot
 from agents.reasoning.multi_agent import MultiAgentReasoning
 from agents.utils.discord_alerts import DiscordAlerter
 
+# Crypto edge detection - multi-signal ensemble
+try:
+    from agents.connectors.crypto_edge import CryptoEdgeDetector
+    CRYPTO_EDGE_AVAILABLE = True
+except ImportError:
+    CRYPTO_EDGE_AVAILABLE = False
+    print("⚠️ CryptoEdgeDetector not available - crypto edge detection disabled")
+
+# Position sync - reconcile DB with on-chain positions
+try:
+    from agents.polymarket.position_sync import PositionSync
+    POSITION_SYNC_AVAILABLE = True
+except ImportError:
+    POSITION_SYNC_AVAILABLE = False
+    print("⚠️ PositionSync not available - position reconciliation disabled")
+
+# Outcome sync - record resolved market outcomes for edge detection
+try:
+    from agents.polymarket.outcome_sync import OutcomeSync
+    OUTCOME_SYNC_AVAILABLE = True
+except ImportError:
+    OUTCOME_SYNC_AVAILABLE = False
+    print("⚠️ OutcomeSync not available - outcome recording disabled")
+
 
 # ============================================================================
 # CRITICAL INCIDENT HANDLING
@@ -53,8 +77,11 @@ class CriticalIncident(RuntimeError):
     pass
 
 
-# Configuration
-DB_PATH = "/tmp/learning_trader.db"
+# Configuration - PERSISTENT DATABASE (survives restarts)
+import os as _os
+_DB_DIR = _os.path.expanduser("~/.polymarket")
+_os.makedirs(_DB_DIR, exist_ok=True)
+DB_PATH = _os.path.join(_DB_DIR, "learning_trader.db")
 DRY_RUN = False  # LIVE TRADING ENABLED - User confirmed
 MIN_CONFIDENCE = 0.20  # Minimum confidence to trade (20% = very aggressive micro-market mode)
 MIN_SAMPLE_SIZE = 20  # Minimum trades before trusting learning
@@ -81,7 +108,7 @@ EMERGENCY_STOP_LOSS = 1000.0  # Effectively unlimited
 
 # DYNAMIC POSITION SIZING - Auto-scales based on performance milestones
 ENABLE_AUTO_SCALING = True  # Automatically increase position size based on performance
-BASE_POSITION_SIZE = 2.0    # Starting position size
+BASE_POSITION_SIZE = 5.0    # Starting position size (Polymarket minimum is $5)
 MAX_AUTO_POSITION_SIZE = 10.0  # Maximum auto-scaling limit (1/4 Kelly ~$9)
 SCALING_START_TRADES = 25   # Minimum trades with XAI before first scaling
 SCALING_WIN_RATE_THRESHOLD = 0.58  # Minimum win rate to trigger scaling (58%)
@@ -125,6 +152,42 @@ class LearningAutonomousTrader:
 
         # Discord alerts
         self.discord = DiscordAlerter()
+
+        # Crypto edge detection (multi-signal ensemble)
+        self.crypto_edge = None
+        if CRYPTO_EDGE_AVAILABLE:
+            try:
+                self.crypto_edge = CryptoEdgeDetector()
+                print("  ✅ CryptoEdgeDetector initialized (funding + OBI + sentiment)")
+            except Exception as e:
+                print(f"  ⚠️ CryptoEdgeDetector init failed: {e}")
+
+        # Position sync - reconcile DB with on-chain positions
+        self.position_sync = None
+        self.last_sync_time = 0
+        self.sync_interval = 1800  # Sync every 30 minutes
+        if POSITION_SYNC_AVAILABLE:
+            try:
+                self.position_sync = PositionSync(db_path)
+                print("  ✅ PositionSync initialized (Polymarket Data API)")
+                # Sync on startup
+                self._sync_positions_with_chain()
+            except Exception as e:
+                print(f"  ⚠️ PositionSync init failed: {e}")
+
+        # Outcome sync - record resolved market outcomes for edge detection
+        # CRITICAL: Without this, edge detection uses empty/stale data!
+        self.outcome_sync = None
+        self.last_outcome_sync_time = 0
+        self.outcome_sync_interval = 600  # Sync outcomes every 10 minutes
+        if OUTCOME_SYNC_AVAILABLE:
+            try:
+                self.outcome_sync = OutcomeSync(db_path)
+                print("  ✅ OutcomeSync initialized (REDEEM event tracking)")
+                # Sync on startup to populate historical P&L
+                self._sync_resolved_outcomes()
+            except Exception as e:
+                print(f"  ⚠️ OutcomeSync init failed: {e}")
 
         # Health check: Test XAI API before trading
         print(f"Testing {self.multi_agent.provider} API access...")
@@ -286,9 +349,12 @@ class LearningAutonomousTrader:
         if edge_stats:
             print("Edge Detection (by market type):")
             for market_type, stats in edge_stats.items():
-                symbol = "✅" if stats['has_edge'] else "❌"
-                print(f"  {symbol} {market_type}: {stats['win_rate']:.1%} win rate, "
-                      f"${stats['avg_pnl_per_trade']:+.2f} avg P&L ({stats['total_trades']} trades)")
+                symbol = "✅" if stats.get('has_edge') else "❌"
+                win_rate = stats.get('win_rate') or 0
+                avg_pnl = stats.get('avg_pnl_per_trade') or 0
+                total_trades = stats.get('total_trades') or 0
+                print(f"  {symbol} {market_type}: {win_rate:.1%} win rate, "
+                      f"${avg_pnl:+.2f} avg P&L ({total_trades} trades)")
         else:
             print("Edge Detection: Not enough data yet (need 20+ trades)")
 
@@ -340,21 +406,101 @@ class LearningAutonomousTrader:
             self.last_position_size = size
         return min(size, MAX_AUTO_POSITION_SIZE)
 
+    def _sync_positions_with_chain(self):
+        """
+        Synchronize local DB with actual on-chain positions.
+        Uses Polymarket Data API: https://data-api.polymarket.com/positions
+        """
+        if not self.position_sync:
+            return
+
+        try:
+            import time
+            current_time = time.time()
+
+            # Only sync if enough time has passed (or forced on startup)
+            if self.last_sync_time > 0 and (current_time - self.last_sync_time) < self.sync_interval:
+                return
+
+            print("\n🔄 Syncing positions with Polymarket...")
+            result = self.position_sync.reconcile_positions(verbose=True)
+            self.last_sync_time = current_time
+
+            # Cache actual exposure for faster lookups
+            self._cached_exposure = self.position_sync.get_open_exposure()
+            self._cached_exposure_time = current_time
+
+        except Exception as e:
+            print(f"⚠️ Position sync error: {e}")
+
+    def _sync_resolved_outcomes(self):
+        """
+        Sync resolved market outcomes from Polymarket REDEEM events.
+
+        CRITICAL: This is what populates actual P&L data for edge detection!
+        Without this, the bot makes decisions based on empty/stale data.
+
+        Uses Polymarket Data API: https://data-api.polymarket.com/activity?type=REDEEM
+        """
+        if not self.outcome_sync:
+            return
+
+        try:
+            import time
+            current_time = time.time()
+
+            # Only sync if enough time has passed (or forced on startup)
+            if self.last_outcome_sync_time > 0 and (current_time - self.last_outcome_sync_time) < self.outcome_sync_interval:
+                return
+
+            print("\n📊 Syncing resolved outcomes from Polymarket...")
+            result = self.outcome_sync.sync_outcomes(verbose=True)
+            self.last_outcome_sync_time = current_time
+
+            if result.get("matched", 0) > 0:
+                print(f"   ✅ Synced {result['matched']} outcomes: {result['wins']}W/{result['losses']}L")
+                print(f"   📈 P&L from synced outcomes: ${result['total_pnl']:.2f}")
+
+                # Show updated edge data by market type
+                by_type = self.outcome_sync.get_pnl_by_market_type()
+                if by_type:
+                    print("\n   Edge by market type (updated):")
+                    for mtype, stats in by_type.items():
+                        edge = "EDGE" if stats["has_edge"] else "NO EDGE"
+                        print(f"      {mtype}: {stats['trades']} trades, "
+                              f"{stats['win_rate']:.1%} WR, "
+                              f"${stats['avg_pnl']:.2f} avg - {edge}")
+
+        except Exception as e:
+            print(f"⚠️ Outcome sync error: {e}")
+
     def get_current_exposure(self) -> tuple:
         """
         Calculate current open exposure across all positions.
 
-        WARNING: Exposure calculation assumes trade_size_usdc = actual filled amount.
-        Risk H3b: If trade_size_usdc is *intended* size not filled size, cap may be wrong.
-        Risk H3c: If DB has stale open positions, cap blocks forever.
+        Uses actual on-chain positions via Polymarket Data API when available.
+        Falls back to DB-based calculation if API unavailable.
 
         Returns:
             (total_cost: float, exposure_pct: float, remaining_capacity: float)
         """
-        open_positions = self.learner.db.get_open_positions()
+        import time
 
-        # Sum position sizes (get_open_positions returns 'size' not 'trade_size_usdc')
-        # TODO: Verify this matches actual filled amounts from exchange
+        # Periodically sync with on-chain positions
+        if self.position_sync:
+            self._sync_positions_with_chain()
+
+            # Use cached on-chain exposure if fresh (within 5 minutes)
+            if hasattr(self, '_cached_exposure_time'):
+                if time.time() - self._cached_exposure_time < 300:  # 5 min cache
+                    total_cost = self._cached_exposure
+                    exposure_pct = total_cost / BANKROLL if BANKROLL > 0 else 0
+                    max_exposure = BANKROLL * MAX_OPEN_EXPOSURE_PCT
+                    remaining_capacity = max(0, max_exposure - total_cost)
+                    return (total_cost, exposure_pct, remaining_capacity)
+
+        # Fallback: Use DB-based calculation
+        open_positions = self.learner.db.get_open_positions()
         total_cost = sum(float(p.get('size', 0) or 0) for p in open_positions)
 
         exposure_pct = total_cost / BANKROLL if BANKROLL > 0 else 0
@@ -624,21 +770,63 @@ class LearningAutonomousTrader:
         Classify market type for edge detection
 
         Categories: politics, crypto, sports, business, other
+
+        IMPROVED: Better sports detection (catches cricket, rugby, etc.)
         """
         question = market.get('question', '').lower()
         description = market.get('description', '').lower()
         text = f"{question} {description}"
 
-        if any(word in text for word in ['election', 'president', 'congress', 'senate', 'vote', 'poll']):
+        # Politics keywords
+        if any(word in text for word in ['election', 'president', 'congress', 'senate', 'vote', 'poll', 'trump', 'biden']):
             return 'politics'
-        elif any(word in text for word in ['bitcoin', 'crypto', 'eth', 'btc', 'blockchain']):
-            return 'crypto'
-        elif any(word in text for word in ['nfl', 'nba', 'mlb', 'sports', 'game', 'championship']):
+
+        # Sports keywords (EXPANDED - catches cricket, soccer, etc.)
+        sports_keywords = [
+            # Major US leagues
+            'nfl', 'nba', 'mlb', 'nhl', 'mls',
+            # International sports
+            'cricket', 'sa20', 'ipl', 't20', 'rugby', 'premier league', 'la liga', 'bundesliga',
+            'champions league', 'uefa', 'fifa', 'world cup',
+            # Generic sports terms
+            'vs.', ' vs ', 'game', 'match', 'championship', 'playoff', 'final',
+            # Bet types (strong indicator)
+            'o/u', 'over', 'under', 'spread', 'handicap', 'moneyline',
+            # Player props
+            'points', 'rebounds', 'assists', 'yards', 'touchdowns', 'goals',
+            # Teams/leagues patterns
+            'eagles', 'warriors', 'lakers', 'celtics', 'yankees', 'dodgers',
+            'fc', 'united', 'city', 'athletics'
+        ]
+        if any(word in text for word in sports_keywords):
             return 'sports'
-        elif any(word in text for word in ['stock', 'company', 'earnings', 'revenue', 'ceo']):
+
+        # Crypto keywords
+        crypto_keywords = ['bitcoin', 'btc', 'ethereum', 'eth', 'crypto', 'blockchain',
+                          'solana', 'sol', 'xrp', 'ripple', 'doge', 'cardano', 'ada']
+        if any(word in text for word in crypto_keywords):
+            return 'crypto'
+
+        # Business keywords
+        if any(word in text for word in ['stock', 'company', 'earnings', 'revenue', 'ceo', 'ipo', 'market cap']):
             return 'business'
-        else:
-            return 'other'
+
+        return 'other'
+
+    def _is_coin_flip_market(self, question: str) -> bool:
+        """
+        Detect "Up or Down" coin-flip markets that have no edge.
+
+        These short-term price direction markets are essentially random walks.
+        """
+        question_lower = question.lower()
+        coin_flip_patterns = [
+            'up or down',
+            'higher or lower',
+            'above or below',
+            'rise or fall'
+        ]
+        return any(pattern in question_lower for pattern in coin_flip_patterns)
 
     def analyze_market(self, market: Dict) -> Tuple[bool, str, Optional[Dict]]:
         """
@@ -702,9 +890,56 @@ class LearningAutonomousTrader:
         print(f"Time to Close: {features['time_to_close_hours']:.1f} hours")
         print()
 
-        # STEP 1: Edge Detection Check
+        # STEP 0: Coin-flip market filter (skip "Up or Down" markets without edge)
+        if self._is_coin_flip_market(question):
+            print("⚠️  COIN-FLIP MARKET DETECTED")
+            print("-" * 80)
+
+            # For coin-flip markets, we REQUIRE multi-signal edge from CryptoEdgeDetector
+            if self.crypto_edge and market_type == 'crypto':
+                token = self.crypto_edge.detect_token_from_question(question)
+                if token:
+                    # Get market price for edge check
+                    yes_price = features.get('prices', {}).get('Yes', 0.5)
+                    edge_result = self.crypto_edge.get_combined_edge(token, yes_price)
+
+                    if edge_result['should_trade']:
+                        print(f"✅ CRYPTO EDGE FOUND: {edge_result['combined_signal']} @ {edge_result['combined_confidence']:.1%}")
+                        # Store edge info for later use in prediction
+                        features['crypto_edge'] = edge_result
+                    else:
+                        reason = f"Coin-flip market, no multi-signal edge: {edge_result.get('skip_reason', 'insufficient signals')}"
+                        print(f"❌ SKIP: {reason}")
+                        self.markets_skipped += 1
+                        return False, reason, None
+                else:
+                    reason = "Coin-flip market, token not recognized for edge detection"
+                    print(f"❌ SKIP: {reason}")
+                    self.markets_skipped += 1
+                    return False, reason, None
+            else:
+                reason = "Coin-flip market without edge detection capability"
+                print(f"❌ SKIP: {reason}")
+                self.markets_skipped += 1
+                return False, reason, None
+
+        # STEP 1: Edge Detection Check (historical P&L based)
         print("STEP 1: Edge Detection")
         print("-" * 80)
+
+        # For crypto markets, also check for multi-signal edge even if not coin-flip
+        if market_type == 'crypto' and self.crypto_edge and 'crypto_edge' not in features:
+            token = self.crypto_edge.detect_token_from_question(question)
+            if token:
+                yes_price = features.get('prices', {}).get('Yes', 0.5)
+                edge_result = self.crypto_edge.get_combined_edge(token, yes_price)
+                features['crypto_edge'] = edge_result
+
+                # Log the edge analysis
+                if edge_result['combined_signal']:
+                    print(f"  Crypto Edge: {edge_result['combined_signal']} @ {edge_result['combined_confidence']:.1%}")
+                    for r in edge_result.get('reasoning', [])[:3]:
+                        print(f"    • {r}")
 
         should_trade, reason, analysis = self.learner.should_trade_market(
             features,
@@ -819,8 +1054,8 @@ class LearningAutonomousTrader:
         print(f"📊 Exposure: ${total_cost:.2f} → ${total_cost + position_size:.2f} ({(total_cost + position_size)/BANKROLL:.1%} of bankroll)")
         print()
 
-        if position_size < 0.10:
-            reason = "Position size too small (edge insufficient)"
+        if position_size < 5.0:
+            reason = f"Position size ${position_size:.2f} below Polymarket minimum ($5)"
             print(f"❌ SKIP: {reason}")
             self.markets_skipped += 1
             return False, reason, None
@@ -862,12 +1097,35 @@ class LearningAutonomousTrader:
         """
         Fast analysis path for micro-markets using single LLM call with gpt-3.5-turbo
         Targets < 5 second analysis time
+
+        UPDATED: Now applies crypto edge detection to filter coin-flip markets
         """
         import random
         from openai import OpenAI
 
         # Extract basic info
         market_price = float(market.get('price', '0.5'))
+
+        # CRITICAL: Check for coin-flip markets and require multi-signal edge
+        if self._is_coin_flip_market(question) and self.crypto_edge:
+            token = self.crypto_edge.detect_token_from_question(question)
+            if token:
+                print(f"  🔍 Checking crypto edge for {token}...")
+                edge_result = self.crypto_edge.get_combined_edge(token, market_price)
+
+                if not edge_result['should_trade']:
+                    reason = f"Micro-market coin-flip, no edge: {edge_result.get('skip_reason', 'insufficient signals')}"
+                    print(f"  ❌ SKIP: {reason}")
+                    self.markets_skipped += 1
+                    return False, reason, None
+
+                # Use edge signal to inform prediction
+                if edge_result['combined_signal']:
+                    print(f"  ✅ EDGE FOUND: {edge_result['combined_signal']} @ {edge_result['combined_confidence']:.1%}")
+            else:
+                print(f"  ❌ SKIP: Coin-flip market, token not recognized")
+                self.markets_skipped += 1
+                return False, "Coin-flip market, token not recognized", None
 
         # Simple fast prediction using XAI (Grok-4.1-Fast-Reasoning)
         client = OpenAI(
@@ -1460,7 +1718,27 @@ Keep it simple and fast."""
                 "limit": 50
             })
 
-            print(f"Found {len(markets)} active markets from API")
+            # Filter out markets with past end dates (prevent trading expired markets)
+            now = datetime.now(timezone.utc)
+            valid_markets = []
+            expired_count = 0
+            for m in markets:
+                end_date_str = m.get("endDate") or m.get("end_date_iso")
+                if end_date_str:
+                    try:
+                        end_date = datetime.fromisoformat(end_date_str.replace("Z", "+00:00"))
+                        if end_date > now:
+                            valid_markets.append(m)
+                        else:
+                            expired_count += 1
+                    except (ValueError, TypeError):
+                        valid_markets.append(m)  # Keep if can't parse date
+                else:
+                    valid_markets.append(m)  # Keep if no end date specified
+
+            markets = valid_markets
+
+            print(f"Found {len(markets)} active markets from API (filtered {expired_count} expired)")
             print()
 
             trades_made = 0
@@ -1511,6 +1789,10 @@ Keep it simple and fast."""
 
         try:
             while True:
+                # Sync resolved outcomes before trading decisions
+                # CRITICAL: This ensures edge detection uses current P&L data
+                self._sync_resolved_outcomes()
+
                 self.scan_and_trade(max_trades=10)  # Higher for micro-markets
 
                 print(f"⏸️ Waiting {scan_interval}s until next scan...")

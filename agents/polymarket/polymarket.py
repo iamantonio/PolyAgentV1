@@ -393,9 +393,17 @@ class Polymarket:
         print("Done!")
         return resp
 
+    def get_balance_address(self) -> str:
+        """Get the address where funds are held (proxy if set, otherwise EOA)."""
+        proxy = os.getenv("POLYMARKET_PROXY_ADDRESS")
+        if proxy:
+            return proxy
+        return self.get_address_for_private_key()
+
     def get_usdc_balance(self) -> float:
+        """Get USDC balance from the correct wallet (proxy or EOA)."""
         balance_res = self.usdc.functions.balanceOf(
-            self.get_address_for_private_key()
+            self.get_balance_address()
         ).call()
         return float(balance_res / 10e5)
 
